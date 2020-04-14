@@ -1,0 +1,10 @@
+flask
+flask-session
+Werkzeug==0.16.0
+psycopg2-binary
+flask_socketio
+flask_wtf
+boto3
+requests
+flask_sqlalchemy
+gunicorn
