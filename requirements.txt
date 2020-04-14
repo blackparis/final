@@ -7,4 +7,5 @@ flask_wtf
 boto3
 requests
 flask_sqlalchemy
+eventlet==0.25.1
 gunicorn
