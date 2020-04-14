@@ -1,0 +1,30 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}
+    Homepage
+{% endblock %}
+
+{% block script %}
+    <script src="{{ url_for('static', filename='admin/homepage.js') }}"></script>
+{% endblock %}
+
+{% block style %}
+    <style>
+
+    </style>
+{% endblock %}
+
+
+{% block body %}
+    <div class="row" style="text-align: center;">
+        <div class="col-lg-4">
+
+        </div>
+        <div class="col-lg-4">
+            hello, world
+        </div>
+        <div class="col-lg-4">
+
+        </div>
+    </div>
+{% endblock %}
