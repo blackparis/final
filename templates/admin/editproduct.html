@@ -10,12 +10,12 @@
 {% block style %}
 <style>
     #addproduct_form {text-align: center; padding: 10px;}
-    #thumbnail {height: 180px;}
+    #thumbnail {height: 150px;}
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="site_subtitle">
+<div style="text-align: center;">
     <h4>Edit Product</h4>
 </div>
 <hr><br>
@@ -52,7 +52,8 @@
             </div>
         </div>
         <div class="col-lg-3">
-            <img src="{{ product['url'] }}" id="thumbnail" class="img-thumbnail"><br>            
+            Image<br>
+            <a href="{{ product['url'] }}" target="_blank"><img src="{{ product['url'] }}" id="thumbnail" class="img-thumbnail"></a>
         </div>
     </div>
     <div style="text-align: center;">        

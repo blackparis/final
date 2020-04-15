@@ -11,7 +11,7 @@
 {% block style %}
     <style>
         #addproduct_form {text-align: center; padding: 20px;}        
-        #thumbnail {height: 150px;}
+        #thumbnail {height: 100px;}
         #new_product {text-align: center; padding: 30px;}
     </style>
 {% endblock %}
@@ -72,10 +72,12 @@
     </form>
     <hr>
     {% if product %}
+    <div style="text-align: center;">Recently Added</div>
+    <hr>
     <div class="row" id="new_product">
         <div class="col-lg-3">
             <a href="{{ product['url'] }}" target="_blank">
-                <img src="{{ product['url'] }}" id="thumbnail" class="img-thumbnail">
+                <a href="{{ product['url'] }}" target="_blank"><img src="{{ product['url'] }}" id="thumbnail" class="img-thumbnail"></a>
             </a>            
         </div>
         <div class="col-lg-3">

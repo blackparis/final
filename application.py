@@ -44,13 +44,13 @@ def get_products():
                 "unit": p.unit,
                 "price": p.price,
                 "stock": p.stock,
-                "url": envs.s3_BUCKET_URL + p.name + '.png',
+                "url": envs.s3_BUCKET_URL + str(p.id) + ".png",
                 "modified": False
             }
             if p.category not in session["categories"]:
                 session["categories"].append(p.category)
             
-        db.session.commit()        
+        db.session.commit()
     else:
         return
 
@@ -115,14 +115,18 @@ def admin_add_product():
     if name in session["products"]:
         return render_template("admin/addproduct.html", shopname=envs.SHOPNAME, admin=session["admin"], form=form, add_product_error="A product with this name already exists", product=session["newproduct"])
 
-    url = add_image(form, name)
+    product = Product(name=name, category=category, subcategory=subcategory, unit=unit, price=price, stock=stock)
+    db.session.add(product)
+    db.session.commit()
+    p = Product.query.filter_by(name=name).first()
+
+    url = add_image(form, str(p.id))
+
     if url == None:
-        return render_template("admin/addproduct.html", shopname=envs.SHOPNAME, admin=session["admin"], form=form, add_product_error="Invalid/Missing Image", product=session["newproduct"])
-    else:
-        product = Product(name=name, category=category, subcategory=subcategory, unit=unit, price=price, stock=stock)
-        db.session.add(product)
+        db.session.delete(p)
         db.session.commit()
-        p = Product.query.filter_by(name=name).first()
+        return render_template("admin/addproduct.html", shopname=envs.SHOPNAME, admin=session["admin"], form=form, add_product_error="Invalid/Missing Image", product=session["newproduct"])
+    else:        
         session["products"][name] = {"id": p.id, "name": name, "category": category, "subcategory": subcategory, "unit": unit, "price": price, "stock": stock, "url": url, "modified": False}
         if category not in session["categories"]:
             session["categories"].append(category)
@@ -155,12 +159,16 @@ def admin_change_product_image(name):
     get_products()
     if name not in session["products"]:
         return redirect("/admin")
-
+    
     form = PhotoForm()    
     if request.method == "GET":
         return render_template("admin/changeimage.html", shopname=envs.SHOPNAME, product=session["products"][name], form=form, admin=session["admin"])
     
-    url = remove_and_add_image(form, name)
+    p = Product.query.filter_by(name=name).first()
+    if p == None:
+        return redirect(url_for('admin_products'))
+
+    url = remove_and_add_image(form, str(p.id))
     if not url:
         return render_template("admin/changeimage.html", shopname=envs.SHOPNAME, product=session["products"][name], form=form, admin=session["admin"], change_image_error="Invalid/Missing Image")
     
@@ -241,11 +249,6 @@ def admin_modify_product(name):
     p.modified = True
     db.session.commit()
 
-    if name != new_name:
-        url = modify_s3_image(name, new_name)
-    else:
-        url = session["products"][name]["url"]
-    
     del session["products"][name]    
     session["products"][new_name] = {
         "id": p.id,
@@ -255,21 +258,11 @@ def admin_modify_product(name):
         "unit": unit,
         "price": price,
         "stock": stock,
-        "url": url,
+        "url": envs.s3_BUCKET_URL + str(p.id) + ".png",
         "modified": True
     }
 
     return redirect(url_for('admin_products'))
-
-def modify_s3_image(name, new_name):
-    s3_client = boto3.client('s3')
-    old_key = "product-images/" + name + ".png"
-    new_key = "product-images/" + new_name + ".png"
-    copy_source = {'Bucket': envs.photo_bucket, 'Key': old_key}
-    s3_client.copy_object(Bucket=envs.photo_bucket, CopySource=copy_source, Key=new_key)
-    s3_client.delete_object(Bucket=envs.photo_bucket, Key=old_key)
-    url = envs.s3_BUCKET_URL + new_name + ".png"
-    return url
 
 
 @app.route("/getinfo/<name>")
