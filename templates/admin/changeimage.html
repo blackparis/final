@@ -15,7 +15,7 @@
 {% endblock %}
 
 {% block body %}
-<div class="site_subtitle">
+<div style="text-align: center;">
     <h4>Change Image</h4>
 </div>
 <hr><br>
@@ -59,9 +59,9 @@
             </div>
         </div>        
     </div>
-    <div style="text-align: center;">        
+    <div style="text-align: center;">
         <button type="submit" class="btn btn-primary">Change</button><br><br>
-        <a href="{{ url_for('admin') }}">Cancel</a>
+        <a href="{{ url_for('admin_products') }}">Cancel</a>
         {% if change_image_error %}
             <br>
             <span class="errorMessage">{{ change_image_error }}</span>

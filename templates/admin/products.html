@@ -1,4 +1,4 @@
-{% extends "admin/layout.html" %}
+{% extends 'admin/layout.html' %}
 
 {% block title %}
     Products
@@ -9,26 +9,35 @@
 {% endblock %}
 
 {% block style %}
-    <style>
-
-    </style>
+<style>
+    .flex-container {display: flex; flex-wrap: wrap; justify-content: center; text-align: center;}
+    .flex-container > div {padding: 5px;}
+    #thumbnail {height: 150px;}    
+</style>
 {% endblock %}
-
 
 {% block body %}
-    <div style="text-align: center;">
-        <a href="{{ url_for('admin_add_product') }}">Add Product</a>
+<div style="text-align: center;">
+    <a href="{{ url_for('admin_add_product') }}">Add Product</a>
+</div>
+<hr>
+<div style="text-align: center;">
+    <a href="" id="allcategories"><span style="padding: 2px;">All</span></a>
+    {% for category in categories %}
+    <a href="" class="categories" data-category="{{ category }}"><span style="padding: 2px;">{{ category }}</span></a>
+    {% endfor %}
+</div>
+<hr>
+<div class="flex-container">
+    {% for name, details in products.items() %}
+    <div class="category" data-category="{{details['category']}}">
+        <a href="" class="productName" data-name="{{ name }}"><span>{{ name }}</span></a><br>
+        <a href="{{ details['url'] }}" target="_blank"><img src="{{ details['url'] }}" id="thumbnail" class="img-thumbnail"></a><br>
+        <a href="{{ url_for('admin_change_product_image', name=name) }}"><span style="color: green;">Change Image</span></a>
+        <a href="{{ url_for('admin_modify_product', name=name) }}"><span style="color: maroon;">Modify</span></a>
     </div>
-    <hr>
-    <div class="row" style="text-align: center;">
-        <div class="col-lg-4">
+    {% endfor %}    
+</div>
 
-        </div>
-        <div class="col-lg-4">
-            hello, world
-        </div>
-        <div class="col-lg-4">
-
-        </div>
-    </div>
 {% endblock %}
+

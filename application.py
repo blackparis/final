@@ -15,7 +15,6 @@ from models import *
 
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = True
-app.config["PERMANENT_SESSION_LIFETIME"] = 36000
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
@@ -45,25 +44,13 @@ def get_products():
                 "unit": p.unit,
                 "price": p.price,
                 "stock": p.stock,
-                "url": None,
+                "url": envs.s3_BUCKET_URL + p.name + '.png',
                 "modified": False
             }
             if p.category not in session["categories"]:
                 session["categories"].append(p.category)
             
-        db.session.commit()
-        
-        s3_client = boto3.client('s3')
-        prefix = "product-images/"
-        response = s3_client.list_objects(Bucket=envs.photo_bucket, Prefix=prefix)
-        if 'Contents' in response and response['Contents']:
-            for content in response['Contents']:
-                name = content['Key']
-                name = name.split("/")
-                name = name[1].split(".")
-                name = name[0]
-                url = s3_client.generate_presigned_url('get_object', Params={'Bucket': envs.photo_bucket, 'Key': content['Key']}, ExpiresIn=36000)
-                session["products"][name]["url"] = url        
+        db.session.commit()        
     else:
         return
 
@@ -72,7 +59,7 @@ def get_products():
 def admin():
     if not session.get("admin"):
         return redirect(url_for('admin_login'))
-
+    get_products()
     return render_template("admin/homepage.html", shopname=envs.SHOPNAME, admin=session["admin"])
 
 
@@ -82,7 +69,7 @@ def admin_products():
         return redirect(url_for('admin_login'))
 
     get_products()
-    return render_template("admin/products.html", shopname=envs.SHOPNAME, admin=session["admin"], products=session["products"])
+    return render_template("admin/products.html", shopname=envs.SHOPNAME, admin=session["admin"], products=session["products"], categories=session["categories"])
 
 
 @app.route("/admin/products/add", methods=["POST", "GET"])
@@ -137,6 +124,8 @@ def admin_add_product():
         db.session.commit()
         p = Product.query.filter_by(name=name).first()
         session["products"][name] = {"id": p.id, "name": name, "category": category, "subcategory": subcategory, "unit": unit, "price": price, "stock": stock, "url": url, "modified": False}
+        if category not in session["categories"]:
+            session["categories"].append(category)
         session["newproduct"] = {"id": p.id, "name": name, "category": category, "subcategory": subcategory, "unit": unit, "price": price, "stock": stock, "url": url, "modified": False}
     
     return redirect(url_for("admin_add_product"))
@@ -150,7 +139,7 @@ def add_image(form, name):
         if image_bytes:
             key = prefix + name + '.png'
             s3_client.put_object(ACL='public-read', Bucket=envs.photo_bucket, Key=key, Body=image_bytes, ContentType='image/png')
-            url = s3_client.generate_presigned_url('get_object',Params={'Bucket': envs.photo_bucket, 'Key': key}, ExpiresIn=36000)
+            url = envs.s3_BUCKET_URL + name + '.png'
             return url
         else:
             return None
@@ -174,13 +163,7 @@ def admin_change_product_image(name):
     url = remove_and_add_image(form, name)
     if not url:
         return render_template("admin/changeimage.html", shopname=envs.SHOPNAME, product=session["products"][name], form=form, admin=session["admin"], change_image_error="Invalid/Missing Image")
-    else:
-        p = Product.query.filter_by(name=name).first()
-        p.modified = True
-        db.session.commit()
-        session["products"][name]["url"] = url
-        session["products"][name]["modified"] = True
-
+    
     return redirect(url_for('admin_products'))
 
 
@@ -192,18 +175,112 @@ def remove_and_add_image(form, name):
         if image_bytes:
             key = prefix + name + '.png'
             s3_client.delete_object(Bucket=envs.photo_bucket, Key=key)
-            s3_client.put_object(Bucket=envs.photo_bucket, Key=key, Body=image_bytes, ContentType='image/png')
-            url = s3_client.generate_presigned_url('get_object',Params={'Bucket': envs.photo_bucket, 'Key': key}, ExpiresIn=36000)
-            return url
+            s3_client.put_object(ACL='public-read', Bucket=envs.photo_bucket, Key=key, Body=image_bytes, ContentType='image/png')            
+            return True
         else:
-            return None
+            return False
     else:
-        return None
+        return False
 
 
 @app.route("/admin/<string:name>/modify", methods=["POST", "GET"])
-def admin_modify_product():
-    return "hello, world"
+def admin_modify_product(name):
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+
+    get_products()
+    p = Product.query.filter_by(name=name).first()
+    if p == None:
+        return redirect("/admin")
+    
+    if request.method == "GET":
+        return render_template("admin/editproduct.html", shopname=envs.SHOPNAME, product=session["products"][name], admin=session["admin"])
+    
+    new_name = request.form.get("name")
+    category = request.form.get("category")
+    subcategory = request.form.get("subcategory")
+    unit = request.form.get("unit")
+    price = request.form.get("price")
+    stock = request.form.get("stock")
+
+    if not new_name or not category or not unit or not price or not stock:
+        return render_template("admin/editproduct.html", shopname=envs.SHOPNAME, product=session["products"][name], admin=session["admin"], edit_product_error="fields marked with * can't be blank")
+
+    new_name = new_name.strip().title()
+    category = category.strip().title()
+    if subcategory:
+        subcategory = subcategory.strip().title()
+    else:
+        subcategory = None
+    unit = unit.strip().title()
+
+    try:
+        price = float(price)
+    except ValueError:
+        return render_template("admin/editproduct.html", shopname=envs.SHOPNAME, product=session["products"][name], admin=session["admin"], edit_product_error="price value should be in decimal format")
+
+    try:
+        stock = float(stock)        
+    except ValueError:
+        return render_template("admin/editproduct.html", shopname=envs.SHOPNAME, product=session["products"][name], admin=session["admin"], edit_product_error="stock value should be in decimal format")
+
+    if stock < 0 or price < 0:
+        return render_template("admin/editproduct.html", shopname=envs.SHOPNAME, product=session["products"][name], admin=session["admin"], edit_product_error="stock and/or price can't be negative")
+
+    if name != new_name:
+        product = Product.query.filter_by(name=new_name).first()
+        if product != None:
+            return render_template("admin/editproduct.html", shopname=envs.SHOPNAME, product=session["products"][name], admin=session["admin"], edit_product_error="a product with this name already exists")
+    
+    p.name = new_name
+    p.category = category
+    p.subcategory = subcategory
+    p.unit = unit
+    p.price = price
+    p.stock = stock
+    p.modified = True
+    db.session.commit()
+
+    if name != new_name:
+        url = modify_s3_image(name, new_name)
+    else:
+        url = session["products"][name]["url"]
+    
+    del session["products"][name]    
+    session["products"][new_name] = {
+        "id": p.id,
+        "name": new_name,
+        "category": category,
+        "subcategory": subcategory,
+        "unit": unit,
+        "price": price,
+        "stock": stock,
+        "url": url,
+        "modified": True
+    }
+
+    return redirect(url_for('admin_products'))
+
+def modify_s3_image(name, new_name):
+    s3_client = boto3.client('s3')
+    old_key = "product-images/" + name + ".png"
+    new_key = "product-images/" + new_name + ".png"
+    copy_source = {'Bucket': envs.photo_bucket, 'Key': old_key}
+    s3_client.copy_object(Bucket=envs.photo_bucket, CopySource=copy_source, Key=new_key)
+    s3_client.delete_object(Bucket=envs.photo_bucket, Key=old_key)
+    url = envs.s3_BUCKET_URL + new_name + ".png"
+    return url
+
+
+@app.route("/getinfo/<name>")
+def getProductInfo(name):
+    if not session.get("admin"):
+        return jsonify({"success": False})
+    
+    if name not in session["products"]:
+        return jsonify({"success": False})
+
+    return jsonify({"success": True, "data": session["products"][name]})
 
 
 @app.route("/admin/login", methods=["POST", "GET"])
