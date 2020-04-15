@@ -169,7 +169,7 @@ def add_image(form, name):
         if image_bytes:
             key = prefix + name + '.png'
             s3_client.put_object(ACL='public-read', Bucket=envs.photo_bucket, Key=key, Body=image_bytes, ContentType='image/png')
-            url = envs.s3_BUCKET_URL + name + '.png'
+            url = envs.s3_BUCKET_URL + key
             return url
         else:
             return None
