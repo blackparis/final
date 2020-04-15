@@ -22,6 +22,16 @@ class Product(db.Model):
     unit = db.Column(db.String, nullable=False)
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Float, nullable=False)
-    modified = db.Column(db.Boolean, nullable=False, default=False)
-    instock = db.Column(db.Boolean, nullable=False)
     display = db.Column(db.Boolean, nullable=False)
+    imageUrl = db.Column(db.String, nullable=True)
+    tags = db.relationship("Tags", lazy=True)
+
+class Tags(db.Model):
+    __tablename__ = "tags"
+    id = id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
+    tag1 = db.Column(db.String, nullable=False)
+    tag2 = db.Column(db.String, nullable=True)
+    tag3 = db.Column(db.String, nullable=True)
+    tag4 = db.Column(db.String, nullable=True)
+    tag5 = db.Column(db.String, nullable=True)

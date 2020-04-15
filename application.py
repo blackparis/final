@@ -44,8 +44,9 @@ def get_products():
                 "unit": p.unit,
                 "price": p.price,
                 "stock": p.stock,
-                "url": envs.s3_BUCKET_URL + str(p.id) + ".png",
-                "modified": False
+                "url": p.imageUrl,
+                "display": p.display,
+                "info": p.info
             }
             if p.category not in session["categories"]:
                 session["categories"].append(p.category)
@@ -127,12 +128,7 @@ def admin_add_product():
     if name in session["products"]:
         return render_template("admin/addproduct.html", shopname=envs.SHOPNAME, admin=session["admin"], form=form, add_product_error="A product with this name already exists", product=session["newproduct"])
 
-    if stock == 0:
-        instock = False
-    else:
-        instock = True
-
-    product = Product(name=name, category=category, subcategory=subcategory, unit=unit, price=price, stock=stock, display=display, instock=instock, info=info)
+    product = Product(name=name, category=category, subcategory=subcategory, unit=unit, price=price, stock=stock, display=display, info=info, imageUrl=None)
     db.session.add(product)
     db.session.commit()
     p = Product.query.filter_by(name=name).first()
@@ -143,7 +139,9 @@ def admin_add_product():
         db.session.delete(p)
         db.session.commit()
         return render_template("admin/addproduct.html", shopname=envs.SHOPNAME, admin=session["admin"], form=form, add_product_error="Invalid/Missing Image", product=session["newproduct"])
-    else:        
+    else:
+        p.imageUrl = url
+        db.session.commit()
         session["products"][name] = {
             "id": p.id,
             "name": name,
@@ -153,9 +151,7 @@ def admin_add_product():
             "price": price,
             "stock": stock,
             "url": url,
-            "modified": False,
             "info": info,
-            "instock": instock,
             "display": display
         }
         if category not in session["categories"]:
@@ -278,24 +274,17 @@ def admin_modify_product(name):
         if product != None:
             return render_template("admin/editproduct.html", shopname=envs.SHOPNAME, product=session["products"][name], admin=session["admin"], edit_product_error="a product with this name already exists")
     
-    if stock == 0:
-        instock = False
-    else:
-        instock = True
-
     p.name = new_name
     p.category = category
     p.subcategory = subcategory
     p.unit = unit
     p.price = price
     p.stock = stock
-    p.modified = True
     p.info = info
     p.display = display
-    p.instock = instock
     db.session.commit()
 
-    del session["products"][name]    
+    del session["products"][name]
     session["products"][new_name] = {
         "id": p.id,
         "name": new_name,
@@ -304,11 +293,9 @@ def admin_modify_product(name):
         "unit": unit,
         "price": price,
         "stock": stock,
-        "url": envs.s3_BUCKET_URL + str(p.id) + ".png",
-        "modified": True,
+        "url": p.imageUrl,
         "info": info,
         "display": display,
-        "instock": instock
     }
 
     return redirect(url_for('admin_products'))

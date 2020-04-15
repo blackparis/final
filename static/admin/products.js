@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let res = JSON.parse(request.responseText);
                 if (res.success) {
                     let p = res.data;
-                    let message = `Name: ${p.name}\nCatrgory: ${p.category}\nSubCategory: ${p.subcategory}\nPrice: Rs ${p.price} / ${p.unit}\nStock: ${p.stock}`;
+                    let message = `${p.info}`;
                     alert(message);
                 } else {
                     alert("Invalid Request");

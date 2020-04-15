@@ -103,10 +103,7 @@
             </div>
             <div>
                 SubCategory: {{ product['subcategory'] }}
-            </div>
-            <div>
-                Display: {{ product['display'] }}
-            </div>
+            </div>            
         </div>
         <div class="col-lg-2">
             <div>
@@ -118,9 +115,6 @@
             <div>
                 Stock: {{product['stock']}}
             </div>
-            <div>
-                In Stock: {{product['instock']}}
-            </div>
         </div>
         <div class="col-lg-4">
             <div>
@@ -131,6 +125,9 @@
         <div class="col-lg-2">
             <a href="{{ url_for('admin_change_product_image', name=product['name']) }}">Change Image</a><br>
             <a href="{{ url_for('admin_modify_product', name=product['name']) }}">Edit Details</a>
+            <div>
+                Display: {{ product['display'] }}
+            </div>
         </div>
     </div>
     <hr>

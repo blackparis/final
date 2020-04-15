@@ -21,6 +21,7 @@
     <a href="{{ url_for('admin_add_product') }}">Add Product</a>
 </div>
 <hr>
+{% if categories %}
 <div style="text-align: center;">
     <a href="" id="allcategories"><span style="padding: 2px;">All</span></a>
     {% for category in categories %}
@@ -28,10 +29,17 @@
     {% endfor %}
 </div>
 <hr>
+{% endif %}
 <div class="flex-container">
     {% for name, details in products.items() %}
     <div class="category" data-category="{{details['category']}}">
         <a href="" class="productName" data-name="{{ name }}"><span>{{ name }}</span></a><br>
+        <div>
+            <span>Rs {{ details['price'] }} / {{ details['unit'] }}</span>
+        </div>
+        <div>
+            <span>Stock Value: {{ details['stock'] }}</span>
+        </div>
         <a href="{{ details['url'] }}" target="_blank"><img src="{{ details['url'] }}" id="thumbnail" class="img-thumbnail"></a><br>
         <a href="{{ url_for('admin_change_product_image', name=name) }}"><span style="color: green;">Change Image</span></a>
         <a href="{{ url_for('admin_modify_product', name=name) }}"><span style="color: maroon;">Modify</span></a>
