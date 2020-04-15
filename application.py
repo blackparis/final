@@ -91,9 +91,21 @@ def admin_add_product():
     unit = request.form.get("unit")
     price = request.form.get("price")
     stock = request.form.get("stock")
+    display = request.form.get("display")
+    info = request.form.get("info")
 
-    if not name or not category or not unit or not price or not stock:
+    if not name or not category or not unit or not price or not stock or not display:
         return render_template("admin/addproduct.html", shopname=envs.SHOPNAME, admin=session["admin"], form=form, add_product_error="fill in all fields marked with *", product=session["newproduct"])
+
+    if display == "True":
+        display = True
+    else:
+        display = False
+    
+    if info:
+        info = info.strip()
+    else:
+        info = None
 
     name = name.strip().title()
     category = category.strip().title()
@@ -115,7 +127,12 @@ def admin_add_product():
     if name in session["products"]:
         return render_template("admin/addproduct.html", shopname=envs.SHOPNAME, admin=session["admin"], form=form, add_product_error="A product with this name already exists", product=session["newproduct"])
 
-    product = Product(name=name, category=category, subcategory=subcategory, unit=unit, price=price, stock=stock)
+    if stock == 0:
+        instock = False
+    else:
+        instock = True
+
+    product = Product(name=name, category=category, subcategory=subcategory, unit=unit, price=price, stock=stock, display=display, instock=instock, info=info)
     db.session.add(product)
     db.session.commit()
     p = Product.query.filter_by(name=name).first()
@@ -127,10 +144,23 @@ def admin_add_product():
         db.session.commit()
         return render_template("admin/addproduct.html", shopname=envs.SHOPNAME, admin=session["admin"], form=form, add_product_error="Invalid/Missing Image", product=session["newproduct"])
     else:        
-        session["products"][name] = {"id": p.id, "name": name, "category": category, "subcategory": subcategory, "unit": unit, "price": price, "stock": stock, "url": url, "modified": False}
+        session["products"][name] = {
+            "id": p.id,
+            "name": name,
+            "category": category,
+            "subcategory": subcategory,
+            "unit": unit,
+            "price": price,
+            "stock": stock,
+            "url": url,
+            "modified": False,
+            "info": info,
+            "instock": instock,
+            "display": display
+        }
         if category not in session["categories"]:
             session["categories"].append(category)
-        session["newproduct"] = {"id": p.id, "name": name, "category": category, "subcategory": subcategory, "unit": unit, "price": price, "stock": stock, "url": url, "modified": False}
+        session["newproduct"] = session["products"][name]
     
     return redirect(url_for("admin_add_product"))
 
@@ -210,9 +240,21 @@ def admin_modify_product(name):
     unit = request.form.get("unit")
     price = request.form.get("price")
     stock = request.form.get("stock")
+    display = request.form.get("display")
+    info = request.form.get("info")
 
-    if not new_name or not category or not unit or not price or not stock:
+    if not new_name or not category or not unit or not price or not stock or not display:
         return render_template("admin/editproduct.html", shopname=envs.SHOPNAME, product=session["products"][name], admin=session["admin"], edit_product_error="fields marked with * can't be blank")
+
+    if display == "True":
+        display = True
+    else:
+        display = False
+    
+    if info:
+        info = info.strip()
+    else:
+        info = None
 
     new_name = new_name.strip().title()
     category = category.strip().title()
@@ -224,13 +266,9 @@ def admin_modify_product(name):
 
     try:
         price = float(price)
-    except ValueError:
-        return render_template("admin/editproduct.html", shopname=envs.SHOPNAME, product=session["products"][name], admin=session["admin"], edit_product_error="price value should be in decimal format")
-
-    try:
-        stock = float(stock)        
-    except ValueError:
-        return render_template("admin/editproduct.html", shopname=envs.SHOPNAME, product=session["products"][name], admin=session["admin"], edit_product_error="stock value should be in decimal format")
+        stock = float(stock)
+    except:
+        return render_template("admin/editproduct.html", shopname=envs.SHOPNAME, product=session["products"][name], admin=session["admin"], edit_product_error="price/stock value should be a number")
 
     if stock < 0 or price < 0:
         return render_template("admin/editproduct.html", shopname=envs.SHOPNAME, product=session["products"][name], admin=session["admin"], edit_product_error="stock and/or price can't be negative")
@@ -240,6 +278,11 @@ def admin_modify_product(name):
         if product != None:
             return render_template("admin/editproduct.html", shopname=envs.SHOPNAME, product=session["products"][name], admin=session["admin"], edit_product_error="a product with this name already exists")
     
+    if stock == 0:
+        instock = False
+    else:
+        instock = True
+
     p.name = new_name
     p.category = category
     p.subcategory = subcategory
@@ -247,6 +290,9 @@ def admin_modify_product(name):
     p.price = price
     p.stock = stock
     p.modified = True
+    p.info = info
+    p.display = display
+    p.instock = instock
     db.session.commit()
 
     del session["products"][name]    
@@ -259,7 +305,10 @@ def admin_modify_product(name):
         "price": price,
         "stock": stock,
         "url": envs.s3_BUCKET_URL + str(p.id) + ".png",
-        "modified": True
+        "modified": True,
+        "info": info,
+        "display": display,
+        "instock": instock
     }
 
     return redirect(url_for('admin_products'))

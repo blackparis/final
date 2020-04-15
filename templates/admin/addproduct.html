@@ -24,7 +24,7 @@
     <hr>
     <form action="{{ url_for('admin_add_product') }}" method="POST" enctype="multipart/form-data">
         <div class="row" id="addproduct_form">
-            <div class="col-lg-3">
+            <div class="col-lg-2">
                 <div class="form-group">
                     <label for="name"><span class="requirement">*</span>Product Name</label>
                     <input type="text" class="form-control" id="name" name="name" autofocus>
@@ -34,7 +34,7 @@
                     <input type="text" class="form-control" id="category" name="category">
                 </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-lg-2">
                 <div class="form-group">
                     <label for="subcategory">Product Sub-Category</label>
                     <input type="text" class="form-control" id="subcategory" name="subcategory">
@@ -44,7 +44,13 @@
                     <input type="text" class="form-control" id="unit" name="unit">
                 </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-lg-4">
+                  <div class="form-group">
+                    <label for="info">Product Info</label>
+                    <textarea class="form-control" rows="5" id="info" name="info"></textarea>
+                  </div>
+            </div>
+            <div class="col-lg-2">
                 <div class="form-group">
                     <label for="price"><span class="requirement">*</span>Product Price</label>
                     <input type="text" class="form-control" id="price" name="price">
@@ -54,11 +60,19 @@
                     <input type="text" class="form-control" id="stock" name="stock">
                 </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-lg-2">
                 <div class="form-group">
-                    <label for="image"><span class="requirement">*</span>Product Image</label><br><br>
+                    <label for="image"><span class="requirement">*</span>Product Image</label><br>
                     {{ form.csrf_token }}
                     {{ form.photo() }}
+                </div>
+                <div class="form-group">
+                    <label for="display"><span class="requirement">*</span>On Display</label>
+                    <select class="form-control" id="display" name="display">
+                        <option disabled selected value="">Display</option>
+                        <option value="True">YES</option>
+                        <option value="False">NO</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -75,12 +89,12 @@
     <div style="text-align: center;">Recently Added</div>
     <hr>
     <div class="row" id="new_product">
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <a href="{{ product['url'] }}" target="_blank">
                 <a href="{{ product['url'] }}" target="_blank"><img src="{{ product['url'] }}" id="thumbnail" class="img-thumbnail"></a>
             </a>            
         </div>
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <div>
                 Name: {{product['name']}}
             </div>
@@ -88,12 +102,13 @@
                 Category: {{product['category']}}
             </div>
             <div>
-                {% if product['subcategory'] %}
-                    SubCategory: {{product['subcategory']}}
-                {% endif %}
+                SubCategory: {{ product['subcategory'] }}
+            </div>
+            <div>
+                Display: {{ product['display'] }}
             </div>
         </div>
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <div>
                 Unit: {{product['unit']}}
             </div>
@@ -103,8 +118,17 @@
             <div>
                 Stock: {{product['stock']}}
             </div>
+            <div>
+                In Stock: {{product['instock']}}
+            </div>
         </div>
-        <div class="col-lg-3">
+        <div class="col-lg-4">
+            <div>
+                {{ product['info'] }}
+            </div>
+
+        </div>
+        <div class="col-lg-2">
             <a href="{{ url_for('admin_change_product_image', name=product['name']) }}">Change Image</a><br>
             <a href="{{ url_for('admin_modify_product', name=product['name']) }}">Edit Details</a>
         </div>
