@@ -1,0 +1,72 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}
+    change image
+{% endblock %}
+
+{% block script %}
+{% endblock %}
+
+{% block style %}
+<style>
+    #addproduct_form {text-align: center; padding: 10px;}
+    #thumbnail {height: 100px;}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="site_subtitle">
+    <h4>Change Image</h4>
+</div>
+<hr><br>
+<form action="{{ url_for('admin_change_product_image', name=product['name']) }}" method="POST" enctype="multipart/form-data">
+    <div class="row" id="addproduct_form">
+        <div class="col-lg-3">
+            <div class="form-group" id="productImageForm">
+                <label for="image"><span class="requirement">*</span>Product Image</label><br><br>
+                {{ form.csrf_token }}
+                {{ form.photo() }}
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="form-group">
+                <label for="name"><span class="requirement">*</span>Product Name</label>
+                <input type="text" class="form-control" id="name" name="name" autofocus disabled value="{{ product['name'] }}">
+            </div>
+            <div class="form-group">
+                <label for="category"><span class="requirement">*</span>Product Category</label>
+                <input type="text" class="form-control" id="category" name="category" disabled value="{{ product['category'] }}">
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="form-group">
+                <label for="subcategory">Product Sub-Category</label>
+                <input type="text" class="form-control" id="subcategory" name="subcategory" disabled value="{{ product['subcategory'] }}">
+            </div>
+            <div class="form-group">
+                <label for="unit"><span class="requirement">*</span>Product Unit</label>
+                <input type="text" class="form-control" id="unit" name="unit" disabled value="{{ product['unit'] }}">
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="form-group">
+                <label for="price"><span class="requirement">*</span>Product Price</label>
+                <input type="text" class="form-control" id="price" name="price" disabled value="{{ product['price'] }}">
+            </div>
+            <div class="form-group">
+                <label for="stock"><span class="requirement">*</span>Stock Quantity</label>
+                <input type="text" class="form-control" id="stock" name="stock" disabled value="{{ product['stock'] }}">
+            </div>
+        </div>        
+    </div>
+    <div style="text-align: center;">        
+        <button type="submit" class="btn btn-primary">Change</button><br><br>
+        <a href="{{ url_for('admin') }}">Cancel</a>
+        {% if change_image_error %}
+            <br>
+            <span class="errorMessage">{{ change_image_error }}</span>
+        {% endif %}
+    </div>
+</form>
+<hr>
+{% endblock %}
