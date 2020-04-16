@@ -28,7 +28,7 @@ class Product(db.Model):
 
 class Tags(db.Model):
     __tablename__ = "tags"
-    id = id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
     tag1 = db.Column(db.String, nullable=False)
     tag2 = db.Column(db.String, nullable=True)

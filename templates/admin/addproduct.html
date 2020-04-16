@@ -126,7 +126,7 @@
             <a href="{{ url_for('admin_change_product_image', name=product['name']) }}">Change Image</a><br>
             <a href="{{ url_for('admin_modify_product', name=product['name']) }}">Edit Details</a><br>
             {% if product['tags'] %}
-                <a href="#">Edit Tags</a>
+                <a href="{{ url_for('admin_edit_tags', name=product['name']) }}">Edit Tags</a>
             {% else %}
                 <a href="{{ url_for('admin_add_tags', name=product['name']) }}">Add Tags</a>
             {% endif %}

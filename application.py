@@ -93,6 +93,70 @@ def admin_products_details():
     get_products()
     return render_template("admin/detailedproducts.html", shopname=envs.SHOPNAME, admin=session["admin"], products=session["products"], categories=session["categories"])
 
+
+@app.route("/admin/<name>/tags/edit", methods=["POST", "GET"])
+def admin_edit_tags(name):
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+    
+    p = Product.query.filter_by(name=name).first()
+    if p == None:
+        return redirect(url_for('admin_products_details'))
+    
+    tags = p.tags
+    
+    if request.method == "GET":
+        return render_template("admin/tags.html", shopname=envs.SHOPNAME, admin=session["admin"], product=p, edit=True, tags=tags[0])
+
+    tag1 = request.form.get("tag1")
+    tag2 = request.form.get("tag2")
+    tag3 = request.form.get("tag3")
+    tag4 = request.form.get("tag4")
+    tag5 = request.form.get("tag5")
+
+    if not tag1:
+        return render_template("admin/tags.html", shopname=envs.SHOPNAME, admin=session["admin"], product=p, edit=True, tags=tags[0], tag_error="atleast first tag is required")
+
+    tag = Tags.query.filter_by(product_id=p.id).first()
+    t = []
+    tag1 = tag1.strip()
+    t.append(tag1)
+    tag.tag1 = tag1
+
+    if tag2:
+        tag2 = tag2.strip()
+        t.append(tag2)
+        tag.tag2 = tag2
+    else:
+        tag.tag2 = None
+    
+    if tag3:
+        tag3 = tag3.strip()
+        t.append(tag3)
+        tag.tag3 = tag3
+    else:
+        tag.tag3 = None
+
+    if tag4:        
+        tag4 = tag4.strip()
+        t.append(tag4)
+        tag.tag4 = tag4
+    else:
+        tag.tag4 = None
+
+    if tag5:
+        tag5 = tag5.strip()
+        t.append(tag5)
+        tag.tag5 = tag5
+    else:
+        tag.tag5 = None
+
+    db.session.commit()
+    session["products"][p.name]["tags"].clear()
+    session["products"][p.name]["tags"] = t
+    return redirect(url_for('admin_products_details'))
+
+
 @app.route("/admin/<name>/tags", methods=["POST", "GET"])
 def admin_add_tags(name):
     if not session.get("admin"):
