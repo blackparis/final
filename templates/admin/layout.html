@@ -2,6 +2,7 @@
 
 <html>
     <head>
+        <script src="{{ url_for('static', filename='admin/layout.js') }}"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"></script>
         <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
@@ -31,7 +32,14 @@
                         {% endif %}
                     </div>
                     <div class="col-lg-2">
-
+                        {% if admin %}
+                            <form action="{{ url_for('admin_search') }}" method="POST" id="searchform">
+                                <div class="form-group">                                    
+                                    <input type="text" class="form-control input-sm" id="keyword" name="keyword" autocomplete="off">
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                            </form>
+                        {% endif %}
                     </div>
                 </div>
             </div>

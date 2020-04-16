@@ -46,11 +46,12 @@ def get_products():
                 "url": p.imageUrl,
                 "display": p.display,
                 "info": p.info,
-                "tags": []
+                "tags": None
             }
 
             tags = Tags.query.filter_by(product_id=p.id).first()
             if tags != None:
+                session["products"][p.name]["tags"] = []
                 if tags.tag1:
                     session["products"][p.name]["tags"].append(tags.tag1)
                 if tags.tag2:
@@ -118,34 +119,36 @@ def admin_edit_tags(name):
         return render_template("admin/tags.html", shopname=envs.SHOPNAME, admin=session["admin"], product=p, edit=True, tags=tags[0], tag_error="atleast first tag is required")
 
     tag = Tags.query.filter_by(product_id=p.id).first()
+    if tag == None:
+        return redirect(url_for('admin'))
     t = []
-    tag1 = tag1.strip()
+    tag1 = tag1.strip().lower()
     t.append(tag1)
     tag.tag1 = tag1
 
     if tag2:
-        tag2 = tag2.strip()
+        tag2 = tag2.strip().lower()
         t.append(tag2)
         tag.tag2 = tag2
     else:
         tag.tag2 = None
     
     if tag3:
-        tag3 = tag3.strip()
+        tag3 = tag3.strip().lower()
         t.append(tag3)
         tag.tag3 = tag3
     else:
         tag.tag3 = None
 
     if tag4:        
-        tag4 = tag4.strip()
+        tag4 = tag4.strip().lower()
         t.append(tag4)
         tag.tag4 = tag4
     else:
         tag.tag4 = None
 
     if tag5:
-        tag5 = tag5.strip()
+        tag5 = tag5.strip().lower()
         t.append(tag5)
         tag.tag5 = tag5
     else:
@@ -179,29 +182,29 @@ def admin_add_tags(name):
         return render_template("admin/tags.html", shopname=envs.SHOPNAME, admin=session["admin"], product=p, add=True, tag_error="atleast first tag is required")
     
     t = []
-    tag1 = tag1.strip()
+    tag1 = tag1.strip().lower()
     t.append(tag1)
 
     if tag2:
-        tag2 = tag2.strip()
+        tag2 = tag2.strip().lower()
         t.append(tag2)
     else:
         tag2 = None
     
     if tag3:
-        tag3 = tag3.strip()
+        tag3 = tag3.strip().lower()
         t.append(tag3)
     else:
         tag3 = None
 
     if tag4:        
-        tag4 = tag4.strip()
+        tag4 = tag4.strip().lower()
         t.append(tag4)
     else:
         tag4 = None
 
     if tag5:
-        tag5 = tag5.strip()
+        tag5 = tag5.strip().lower()
         t.append(tag5)
     else:
         tag5 = None
@@ -293,7 +296,7 @@ def admin_add_product():
             "url": url,
             "info": info,
             "display": display,
-            "tags": []
+            "tags": None
         }
         if category not in session["categories"]:
             session["categories"].append(category)
@@ -414,7 +417,8 @@ def admin_modify_product(name):
         product = Product.query.filter_by(name=new_name).first()
         if product != None:
             return render_template("admin/editproduct.html", shopname=envs.SHOPNAME, product=session["products"][name], admin=session["admin"], edit_product_error="a product with this name already exists")
-    
+
+    session["categories"].remove(p.category)
     p.name = new_name
     p.category = category
     p.subcategory = subcategory
@@ -424,6 +428,7 @@ def admin_modify_product(name):
     p.info = info
     p.display = display
     db.session.commit()
+    session["categories"].append(category)
 
     tags = session["products"][name]["tags"]
     del session["products"][name]
@@ -453,6 +458,36 @@ def getProductInfo(name):
         return jsonify({"success": False})
 
     return jsonify({"success": True, "data": session["products"][name]})
+
+
+@app.route("/admin/search", methods=["POST"])
+def admin_search():
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+    keyword = request.form.get("keyword")
+    if not keyword:
+        return render_template("admin/search.html", shopname=envs.SHOPNAME, admin=session["admin"], message="Type Something")
+    
+    keyword = keyword.strip().lower()
+
+    results = []
+    for key, value in session["products"].items():
+        if keyword in key.lower() or keyword in value["tags"]:
+            results.append(value)
+
+    return render_template("admin/search.html", shopname=envs.SHOPNAME, admin=session["admin"], results=results, keyword=keyword)
+
+
+@app.route("/admin/newproducts")
+def newproducts():
+    if not session.get("admin"):
+        return jsonify({"success": False})
+    
+    for value in session["products"].values():
+        if value["tags"] == None:
+            return jsonify({"success": True})
+    
+    return jsonify({"success": False})
 
 
 @app.route("/admin/login", methods=["POST", "GET"])
