@@ -35,7 +35,6 @@ def get_products():
         session["categories"] = []
         products = Product.query.order_by(Product.name).all()
         for p in products:
-            p.modified = False
             session["products"][p.name] = {
                 "id": p.id,
                 "name": p.name,
@@ -46,12 +45,25 @@ def get_products():
                 "stock": p.stock,
                 "url": p.imageUrl,
                 "display": p.display,
-                "info": p.info
+                "info": p.info,
+                "tags": []
             }
+
+            tags = Tags.query.filter_by(product_id=p.id).first()
+            if tags != None:
+                if tags.tag1:
+                    session["products"][p.name]["tags"].append(tags.tag1)
+                if tags.tag2:
+                    session["products"][p.name]["tags"].append(tags.tag2)
+                if tags.tag3:
+                    session["products"][p.name]["tags"].append(tags.tag3)
+                if tags.tag4:
+                    session["products"][p.name]["tags"].append(tags.tag4)
+                if tags.tag5:
+                    session["products"][p.name]["tags"].append(tags.tag5)
+
             if p.category not in session["categories"]:
-                session["categories"].append(p.category)
-            
-        db.session.commit()
+                session["categories"].append(p.category)        
     else:
         return
 
@@ -71,6 +83,70 @@ def admin_products():
 
     get_products()
     return render_template("admin/products.html", shopname=envs.SHOPNAME, admin=session["admin"], products=session["products"], categories=session["categories"])
+
+
+@app.route("/admin/products/details")
+def admin_products_details():
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+
+    get_products()
+    return render_template("admin/detailedproducts.html", shopname=envs.SHOPNAME, admin=session["admin"], products=session["products"], categories=session["categories"])
+
+@app.route("/admin/<name>/tags", methods=["POST", "GET"])
+def admin_add_tags(name):
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+    
+    p = Product.query.filter_by(name=name).first()
+    if p == None:
+        return redirect(url_for('admin_products_details'))
+    
+    if request.method == "GET":
+        return render_template("admin/tags.html", shopname=envs.SHOPNAME, admin=session["admin"], product=p, add=True)
+
+    tag1 = request.form.get("tag1")
+    tag2 = request.form.get("tag2")
+    tag3 = request.form.get("tag3")
+    tag4 = request.form.get("tag4")
+    tag5 = request.form.get("tag5")
+
+    if not tag1:
+        return render_template("admin/tags.html", shopname=envs.SHOPNAME, admin=session["admin"], product=p, add=True, tag_error="atleast first tag is required")
+    
+    t = []
+    tag1 = tag1.strip()
+    t.append(tag1)
+
+    if tag2:
+        tag2 = tag2.strip()
+        t.append(tag2)
+    else:
+        tag2 = None
+    
+    if tag3:
+        tag3 = tag3.strip()
+        t.append(tag3)
+    else:
+        tag3 = None
+
+    if tag4:        
+        tag4 = tag4.strip()
+        t.append(tag4)
+    else:
+        tag4 = None
+
+    if tag5:
+        tag5 = tag5.strip()
+        t.append(tag5)
+    else:
+        tag5 = None
+
+    tags = Tags(product_id=p.id, tag1=tag1, tag2=tag2, tag3=tag3, tag4=tag4, tag5=tag5)
+    db.session.add(tags)
+    db.session.commit()
+    session["products"][p.name]["tags"] = t
+    return redirect(url_for('admin_products_details'))
 
 
 @app.route("/admin/products/add", methods=["POST", "GET"])
@@ -152,7 +228,8 @@ def admin_add_product():
             "stock": stock,
             "url": url,
             "info": info,
-            "display": display
+            "display": display,
+            "tags": []
         }
         if category not in session["categories"]:
             session["categories"].append(category)
@@ -284,6 +361,7 @@ def admin_modify_product(name):
     p.display = display
     db.session.commit()
 
+    tags = session["products"][name]["tags"]
     del session["products"][name]
     session["products"][new_name] = {
         "id": p.id,
@@ -296,6 +374,7 @@ def admin_modify_product(name):
         "url": p.imageUrl,
         "info": info,
         "display": display,
+        "tags": tags
     }
 
     return redirect(url_for('admin_products'))

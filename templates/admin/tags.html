@@ -1,0 +1,76 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}
+    add/modify Tags
+{% endblock %}
+
+{% block script %}
+    <script src="{{ url_for('static', filename='admin/homepage.js') }}"></script>
+{% endblock %}
+
+{% block style %}
+    <style>
+        #tagsForm {text-align: center; padding: 5px;}
+    </style>
+{% endblock %}
+
+
+{% block body %}
+    <div style="text-align: center;">
+        <a href="{{ url_for('admin_products') }}">Back to Product</a>&nbsp;&nbsp;
+        <a href="{{ url_for('admin_products_details') }}">Back to Detailed View</a>
+    </div>
+    <hr>
+    {% if add %}
+        <div style="text-align: center; padding: 5px;">
+            <h5>Add Tags for {{ product.name }}</h5>
+        </div>
+        <div id="tagsForm">
+            <form action="{{ url_for('admin_add_tags', name=product.name) }}" method="POST">
+                <div class="row">
+                    <div class="col-lg-1">
+                    </div>
+                    <div class="col-lg-2">
+                        <div class="form-group">
+                            <label for="tag1"><span class="requirement">*</span>Tag 1</label>
+                            <input type="text" class="form-control" id="tag1" name="tag1" autocomplete="off" autofocus>
+                        </div>
+                    </div>
+                    <div class="col-lg-2">
+                        <div class="form-group">
+                            <label for="tag2">Tag 2</label>
+                            <input type="text" class="form-control" id="tag2" name="tag2" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="col-lg-2">
+                        <div class="form-group">
+                            <label for="tag3">Tag 3</label>
+                            <input type="text" class="form-control" id="tag3" name="tag3" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="col-lg-2">
+                        <div class="form-group">
+                            <label for="tag4">Tag 4</label>
+                            <input type="text" class="form-control" id="tag4" name="tag4" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="col-lg-2">
+                        <div class="form-group">
+                            <label for="tag5">Tag 5</label>
+                            <input type="text" class="form-control" id="tag5" name="tag5" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="col-lg-1">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Add</button>                
+            </form>
+            {% if tag_error %}
+                <div class="errorMessage">
+                    {{tag_error}}
+                </div>
+            {% endif %}
+        </div>
+        <hr>
+    {% endif %}
+{% endblock %}

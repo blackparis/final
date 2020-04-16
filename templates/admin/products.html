@@ -18,7 +18,8 @@
 
 {% block body %}
 <div style="text-align: center;">
-    <a href="{{ url_for('admin_add_product') }}">Add Product</a>
+    <a href="{{ url_for('admin_add_product') }}">Add Product</a>&nbsp;&nbsp;
+    <a href="{{ url_for('admin_products_details') }}">Detailed View</a>
 </div>
 <hr>
 {% if categories %}
