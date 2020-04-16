@@ -22,13 +22,10 @@
                     <div class="col-lg-8">
                         <h1 id="shopname">{{ shopname }}</h1>
                         {% if admin %}
-                            <a href="{{ url_for('admin_products') }}">Products</a>
-                            <a href="#">Customers</a>
-                            <a href="#">Orders</a>
-                            <a href="#">Messages</a>
-                            <br>
-                            <a href="{{ url_for('admin')}}">Homepage</a>
-                            <a href="{{ url_for('admin_logout')}}">Logout</a>
+                            <a href="{{ url_for('admin_products') }}">Products</a>&nbsp;&nbsp;
+                            <a href="#">Customers</a>&nbsp;&nbsp;
+                            <a href="#">Orders</a>&nbsp;&nbsp;
+                            <a href="#">Messages</a>&nbsp;&nbsp;
                         {% endif %}
                     </div>
                     <div class="col-lg-2">
@@ -39,6 +36,8 @@
                                 </div>
                                 <button type="submit" class="btn btn-primary btn-sm">Search</button>
                             </form>
+                            <a href="{{ url_for('admin')}}">Homepage</a>&nbsp;&nbsp;
+                            <a href="{{ url_for('admin_logout')}}">Logout</a>
                         {% endif %}
                     </div>
                 </div>

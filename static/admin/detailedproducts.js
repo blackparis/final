@@ -1,4 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+    document.querySelectorAll(".categories").forEach(a => {
+        a.onclick = ()=> {
+            let c = a.dataset.category;
+            document.querySelectorAll(".products").forEach(div => {
+                if (div.id === c) {
+                    div.style.display = "block";
+                } else {
+                    div.style.display = "none";
+                }
+            });
+            return false;
+        }        
+    });
     
     document.querySelector("#addtags").onclick = ()=> {
 

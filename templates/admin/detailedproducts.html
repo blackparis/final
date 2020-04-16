@@ -19,15 +19,21 @@
 {% block body %}
     <div style="text-align: center;">
         <a href="{{ url_for('admin_add_product') }}">Add Product</a>&nbsp;&nbsp;
-        <a href="{{ url_for('admin_products') }}">Back to Products</a>
+        <a href='' id='addtags'>Add Tags</a>
         <div>
-            <a href='' id='addtags'>Add Tags</a>&nbsp;&nbsp;<a href='' id='return_addtags'>View All</a>
-        </div>        
+            <a href='' id='return_addtags'>All</a>&nbsp;&nbsp;
+            {% for c in categories %}
+                <a href="" class="categories" data-category="{{ c }}">{{ c }}</a>&nbsp;&nbsp;
+            {% endfor %}
+        </div>
+        <div>
+            
+        </div>
     </div>
     <hr>
     <div id="allproducts">
         {% for name, product in products.items() %}
-            <div class="products" data-name="{{ product['name'] }}">
+            <div class="products" data-name="{{ product['name'] }}" id="{{ product['category'] }}">
             <div class="row">
                 <div class="col-lg-2 col-sm-2">
                     <a href="{{ product['url'] }}" target="_blank">
