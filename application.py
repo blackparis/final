@@ -418,7 +418,6 @@ def admin_modify_product(name):
         if product != None:
             return render_template("admin/editproduct.html", shopname=envs.SHOPNAME, product=session["products"][name], admin=session["admin"], edit_product_error="a product with this name already exists")
 
-    session["categories"].remove(p.category)
     p.name = new_name
     p.category = category
     p.subcategory = subcategory
@@ -428,7 +427,9 @@ def admin_modify_product(name):
     p.info = info
     p.display = display
     db.session.commit()
-    session["categories"].append(category)
+
+    if category not in session["categories"]:
+        session["categories"].append(category)
 
     tags = session["products"][name]["tags"]
     del session["products"][name]
