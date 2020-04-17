@@ -8,5 +8,5 @@ SHOPNAME = os.getenv("SHOPNAME")
 photo_bucket = os.getenv("s3_BUCKET")
 s3_BUCKET_URL = os.getenv("s3_BUCKET_URL")
 
-EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
-EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
+ADMIN_EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+ADMIN_EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")

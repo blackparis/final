@@ -1,0 +1,54 @@
+{% extends 'customers/auth/layout.html' %}
+
+{% block title %}
+    verify
+{% endblock %}
+
+{% block script %}
+{% endblock %}
+
+{% block style %}
+<style>
+    #login_div {text-align: center; padding: 20px;}
+</style>
+{% endblock %}
+
+{% block body %}
+<div style="text-align: center;">
+    <h4>Verify Your Email Address</h4>
+</div>
+<br><br>
+<div class="row" id="login_div">
+    <div class="col-lg-4">
+
+    </div>
+    <div class="col-lg-4">
+        <form action="{{ url_for('verification') }}" method="POST">
+            <div class="form-group">
+                <label for="code"><span class="requirement">*</span>Verification Code</label>
+                <input type="text" class="form-control" id="code" name="code" autofocus autocomplete="off">
+            </div>
+            <button type="submit" class="btn btn-primary">Verify</button>
+        </form>
+        <div>
+            <p>
+                A verification code is sent to {{email}}.<br>
+                Please ckeck your inbox/span folder.
+            </p>
+        </div>
+        {% if verification_code_error %}
+            <div class="errorMessage">
+                {{ verification_code_error }}
+            </div>
+        {% else %}
+            <br>
+        {% endif %}
+        <a href="{{ url_for('logout') }}">Cancel</a><br>
+        <a href="{{ url_for('resendverificationcode') }}">Resend Verification Code</a>
+    </div>
+    <div class="col-lg-4">
+
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "customers/auth/layout.html" %}
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block script %}
+{% endblock %}
+
+{% block style %}
+    <style>
+
+    </style>
+{% endblock %}
+
+
+{% block body %}
+<div style="padding: 10px; text-align: center;">
+    <h3>Register</h3><br>
+    <form action="{{ url_for('register') }}" method="POST">
+        <div class="row" style="text-align: center;">
+            <div class="col-lg-3">
+                <div class="form-group">
+                    <label for="username"><span class="requirement">*</span>Username</label>
+                    <input type="text" class="form-control" placeholder="Enter Username" id="username" name="username" autocomplete="off" autofocus>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="form-group">
+                    <label for="email"><span class="requirement">*</span>Email Address</label>
+                    <input type="email" class="form-control" placeholder="Enter Email Address" id="email" name="email" autocomplete="off">
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="form-group">
+                    <label for="password1"><span class="requirement">*</span>Password</label>
+                    <input type="password" class="form-control" placeholder="Enter Password" id="password1" name="password1" autocomplete="off">
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="form-group">
+                    <label for="password2"><span class="requirement">*</span>Confirm Password</label>
+                    <input type="password" class="form-control" placeholder="Confirm Password" id="password2" name="password2" autocomplete="off">
+                </div>
+            </div>
+        </div>
+        <br>
+        <button type="submit" class="btn btn-primary">Register</button>
+        {% if register_error %}
+            <br>
+            <div class="errorMessage">
+                {{register_error}}
+            </div>                
+        {% endif %}
+    </form>
+</div>
+{% endblock %}

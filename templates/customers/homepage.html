@@ -1,0 +1,118 @@
+{% extends "customers/layout.html" %}
+
+{% block title %}
+    Homepage
+{% endblock %}
+
+{% block script %}
+    <script src="{{ url_for('static', filename='customers/homepage.js') }}"></script>
+    <script id="cart_row" type="text/x-handlebars-template">
+        {% raw -%}
+            <p>Your Cart</p>
+            <table class="table">
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Amount</th>
+                    <th>Remove</th>
+                </tr>
+                {{#each items}}
+                <tr id="{{this.name}}">
+                    <td>{{ this.name }}</td>
+                    <td>Rs {{ this.price }} / {{ this.unit }}</td>
+                    <td>{{ this.qty }}</td>
+                    <td>Rs. {{ this.amount }}</td>
+                    <td><a href="/remove/cart/{{this.name}}" class="removeFromCart" data-name="{{ this.name }}">Remove</a></td>
+                </tr>
+                {{/each}}
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td><b>Total</b></td>
+                    <td><b>Rs. <span id="cartprice">{{ amount }}</span></b></td>
+                    <td></td>
+                </tr>
+            </table>
+        {%- endraw %}
+    </script>
+{% endblock %}
+
+{% block style %}
+    <style>
+        .flex-container {display: flex; flex-wrap: wrap; justify-content: center; text-align: center;}
+        .flex-container > div {padding: 5px;}
+        #thumbnail {height: 150px;}
+        .table {width: 100%;}
+    </style>
+{% endblock %}
+
+
+{% block body %}
+    <div class="row" style="text-align: center;">
+        <div class="col-lg-3">
+
+        </div>
+        <div class="col-lg-7" id="cart_table">
+            {% if cart %}
+                <p>Your Cart</p>
+                <table class="table">
+                    <tr>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Amount</th>
+                        <th>Remove</th>
+                    </tr>
+                    {% for item, details in cart.items() %}
+                    <tr id="{{ item }}">
+                        <td>{{ item }}</td>
+                        <td>Rs {{ details['price'] }} / {{ details['unit'] }}</td>
+                        <td>{{ details['qty'] }}</td>
+                        <td>Rs. {{ details['amount'] }}</td>
+                        <td><a href="{{ url_for('removeCartItem', name=item) }}" class="removeFromCart" data-name="{{ item }}">Remove</a></td>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td><b>Total</b></td>
+                        <td><b>Rs. <span id="cartprice">{{ amount }}</span></b></td>
+                        <td></td>
+                    </tr>
+                </table>
+            {% endif %}
+        </div>
+        <div class="col-lg-2">
+
+        </div>
+    </div>
+    <hr>
+    {% if categories %}
+    <div style="text-align: center;">
+        <a href="" id="allcategories"><span style="padding: 2px;">All</span></a>
+        {% for category in categories %}
+        <a href="" class="categories" data-category="{{ category }}"><span style="padding: 2px;">{{ category }}</span></a>
+        {% endfor %}
+    </div>
+    <hr>
+    {% endif %}
+    <div class="flex-container">
+        {% for name, details in products.items() %}
+        <div class="category" data-category="{{details['category']}}">
+            <span style="color: green;">{{ name }}</span><br>
+            <div>
+                <span>Rs {{ details['price'] }} / {{ details['unit'] }}</span>
+            </div>
+            <a href="{{ details['url'] }}" target="_blank"><img src="{{ details['url'] }}" id="thumbnail" class="img-thumbnail"></a><br>
+
+            <form style="padding: 5px;" class="form-inline cart" data-product_id="{{ details['id'] }}" action="{{ url_for('addToCart', pid=details['id']) }}" method="POST">
+                &nbsp;&nbsp;&nbsp;
+                <input type="text" style="width: 50px;" placeholder="qty" class="form-control" id="{{ details['id'] }}" autocomplete="off" name="qty">
+                &nbsp;&nbsp;&nbsp;
+                <button type="submit" class="btn btn-success">Add</button>
+            </form>
+        </div>
+        {% endfor %}    
+    </div>
+{% endblock %}

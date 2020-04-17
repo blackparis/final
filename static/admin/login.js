@@ -10,3 +10,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }            
     };
 });
+
+//also used for customer login

@@ -519,9 +519,311 @@ def admin_logout():
     return redirect(url_for('admin_login'))
 
 
+def fetch_products():
+    PRODUCTS = {}
+    categories = []
+    products = Product.query.order_by(Product.name).all()
+    for p in products:
+        PRODUCTS[p.name] = {
+            "id": p.id,
+            "name": p.name,
+            "category": p.category,
+            "subcategory": p.subcategory,
+            "unit": p.unit,
+            "price": p.price,
+            "stock": p.stock,
+            "url": p.imageUrl,
+            "display": p.display,
+            "info": p.info,
+            "tags": None
+        }
+        tags = Tags.query.filter_by(product_id=p.id).first()
+        if tags != None:
+            PRODUCTS[p.name]["tags"] = []
+            if tags.tag1:
+                PRODUCTS[p.name]["tags"].append(tags.tag1)
+            if tags.tag2:
+                PRODUCTS[p.name]["tags"].append(tags.tag2)
+            if tags.tag3:
+                PRODUCTS[p.name]["tags"].append(tags.tag3)
+            if tags.tag4:
+                PRODUCTS[p.name]["tags"].append(tags.tag4)
+            if tags.tag5:
+                PRODUCTS[p.name]["tags"].append(tags.tag5)
+
+        if p.category not in categories:
+            categories.append(p.category)
+    
+    return {"products": PRODUCTS, "categories": categories}
+
+
 @app.route("/")
 def homepage():
-    return "hello, world"
+    if session.get("customer") == None:
+        return redirect(url_for('login'))
+
+    if session.get("cart") == None:
+        session["cart"] = {}
+        session["totalprice"] = 0
+    
+    if session.get("context") == None:
+        #context = fetch_products()
+        session["context"] = fetch_products()
+    
+    #return render_template("customers/homepage.html", shopname=envs.SHOPNAME, customer=session["customer"], products=context["products"], categories=context["categories"], cart=session["cart"], amount=session["totalprice"])
+    return render_template("customers/homepage.html", shopname=envs.SHOPNAME, customer=session["customer"], products=session["context"]["products"], categories=session["context"]["categories"], cart=session["cart"], amount=session["totalprice"])
+
+
+@app.route("/cart/add/<int:pid>", methods=["POST"])
+def addToCart(pid):
+    if session.get("customer") == None:
+        return redirect(url_for('login'))
+    
+    qty = request.form.get("qty")
+    try:
+        qty = float(qty)
+        pid = int(pid)
+    except:
+        return redirect(url_for('homepage'))
+    
+    p = Product.query.get(pid)
+    if p == None:
+        return redirect(url_for('homepage'))
+
+    if p.stock < qty:
+        return redirect(url_for('homepage'))
+
+    if session.get("cart") == None:
+        session["cart"] = {}
+        session["totalprice"] = 0
+
+    if p.name in session["cart"]:
+        QTY = session["cart"][p.name]["qty"] + qty
+        if p.stock < QTY:
+            return redirect(url_for('homepage'))
+        session["cart"][p.name].clear()
+        session["cart"][p.name] = {"name": p.name, "price": p.price, "unit": p.unit, "qty": QTY, "amount": ((p.price)*(QTY))}
+        session["totalprice"] = session["totalprice"] + ((p.price)*qty)
+    else:
+        session["cart"][p.name] = {"name": p.name, "price": p.price, "unit": p.unit, "qty": qty, "amount": ((p.price)*qty)}
+        session["totalprice"] = session["totalprice"] + ((p.price)*qty)
+
+    return redirect(url_for('homepage'))
+
+
+@app.route("/add2cart/<pid>/<qty>")
+def add2cart(pid, qty):
+    if session.get("customer") == None:
+        return jsonify({"success": False, "message": "Invalid Request"})
+    
+    try:
+        pid = int(pid)
+        qty = float(qty)
+    except:
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    p = Product.query.get(pid)
+    if p == None:
+        return jsonify({"success": False, "message": "Product Does Not Exist"})
+
+    if p.stock < qty:
+        return jsonify({"success": False, "message": f"{qty} {p.unit} not available.\nTry a smaller amount."})
+
+    if session.get("cart") == None:
+        session["cart"] = {}
+        session["totalprice"] = 0
+
+    if p.name in session["cart"]:
+        QTY = session["cart"][p.name]["qty"] + qty
+        if p.stock < QTY:
+            return jsonify({"success": False, "message": f"{qty} {p.unit} not available.\nTry a smaller amount."})
+        session["cart"][p.name].clear()
+        session["cart"][p.name] = {"name": p.name, "price": p.price, "unit": p.unit, "qty": QTY, "amount": ((p.price)*(QTY))}
+        session["totalprice"] = session["totalprice"] + ((p.price)*qty)
+    else:
+        session["cart"][p.name] = {"name": p.name, "price": p.price, "unit": p.unit, "qty": qty, "amount": ((p.price)*qty)}
+        session["totalprice"] = session["totalprice"] + ((p.price)*qty)
+
+    return jsonify({"success": True, "cart": session["cart"], "amount": session["totalprice"]})
+
+
+@app.route("/remove/cart/<name>")
+def removeCartItem(name):
+    if session.get("customer") == None:
+        return redirect(url_for('homepage'))
+
+    if session.get("cart") == None:
+        return redirect(url_for('homepage'))
+    
+    if name not in session["cart"]:
+        return redirect(url_for('homepage'))
+        
+    session["totalprice"] = session["totalprice"] - session["cart"][name]["amount"]
+    del session["cart"][name]
+
+    return redirect(url_for('homepage'))
+
+
+@app.route("/cart/remove/<name>")
+def removeFromCart(name):
+    if session.get("customer") == None:
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    if session.get("cart") == None:
+        return jsonify({"success": False, "message": "Invalid Request"})
+    
+    if name not in session["cart"]:
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    session["totalprice"] = session["totalprice"] - session["cart"][name]["amount"]
+    del session["cart"][name]
+
+    return jsonify({"success": True, "amount": session["totalprice"]})
+
+
+
+
+
+
+
+    
+
+
+
+@app.route("/login", methods=["POST", "GET"])
+def login():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
+
+    if request.method == "GET":
+        return render_template("customers/auth/login.html", shopname=envs.SHOPNAME, login=True)
+    
+    username = request.form.get("username")
+    password = request.form.get("password")
+
+    if not username or not password:
+        return render_template("customers/auth/login.html", shopname=envs.SHOPNAME, login=True, login_error="enter username and password")
+    
+    username = username.strip()
+    user = User.query.filter_by(username=username).first()
+    if user == None:
+        return render_template("customers/auth/login.html", shopname=envs.SHOPNAME, login=True, login_error="Invalid Credentials")
+    
+    if check_password_hash(user.password, password):
+        session["customer"] = username
+        session.permanent = True
+        return redirect(url_for('homepage'))
+    
+    return render_template("customers/auth/login.html", shopname=envs.SHOPNAME, login=True, login_error="Invalid Credentials")
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+
+@app.route("/register", methods=["POST", "GET"])
+def register():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
+    
+    if request.method == "GET":
+        return render_template("customers/auth/register.html", shopname=envs.SHOPNAME, register=True)
+
+    username = request.form.get("username")
+    email = request.form.get("email")
+    password1 = request.form.get("password1")
+    password2 = request.form.get("password2")
+
+    if not username or not email or not password1 or not password2:
+        return render_template("customers/auth/register.html", shopname=envs.SHOPNAME, register_error="fill in all fields", register=True)
+
+    if username == envs.ADMIN_USERNAME:
+        return render_template("customers/auth/register.html", shopname=envs.SHOPNAME, register_error="Username already taken. Select a different Username", register=True)
+
+    if not util.validate_username(username):
+        return render_template("customers/auth/register.html", shopname=envs.SHOPNAME, register_error="Invalid Username", register=True)
+    
+    if not util.validate_password(password1):
+        return render_template("customers/auth/register.html", shopname=envs.SHOPNAME, register_error="Type a Strong Password", register=True)
+
+    if not util.validate_email(email):
+        return render_template("customers/auth/register.html", shopname=envs.SHOPNAME, register_error="Invalid Email Address", register=True)
+
+    if password1 != password2:
+        return render_template("customers/auth/register.html", shopname=envs.SHOPNAME, register_error="passwords don't match", register=True)
+    
+    user = User.query.filter_by(email=email).first()
+    if user != None:
+        return render_template("customers/auth/register.html", shopname=envs.SHOPNAME, register_error="This email is associated with another account.", register=True)
+
+    user = User.query.filter_by(username=username).first()
+    if user != None:
+        return render_template("customers/auth/register.html", shopname=envs.SHOPNAME, register_error="Username already taken. Select a different Username", register=True)
+    
+    password = generate_password_hash(password1)
+    username = username.strip()
+    code = str(random.randint(100000, 999999))
+    session["userinfo"] = {"email": email, "password": password, "username": username, "code": code}
+    
+    message1 = f"<h1 style='text-align: center;'>{envs.SHOPNAME}</h1>"
+    message2 = f"<h2 style='text-align: center;'>{code}</h2>"
+    message3 = "<h3 style='text-align: center;'>Verify Your Email Address</h3>"
+    m = message1 + message2 + message3
+    util.sendmail(email, "Email Verification", m)
+    return redirect("/verification")
+
+
+@app.route("/resend")
+def resendverificationcode():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
+
+    if session.get("userinfo") == None:
+        return redirect(url_for('homepage'))
+
+    code = str(random.randint(100000, 999999))
+    session["userinfo"]["code"] = code    
+    message1 = f"<h1 style='text-align: center;'>{envs.SHOPNAME}</h1>"
+    message2 = f"<h2 style='text-align: center;'>{code}</h2>"
+    message3 = "<h3 style='text-align: center;'>Verify Your Email Address</h3>"
+    m = message1 + message2 + message3
+    util.sendmail(session["userinfo"]["email"], "Email Verification", m)
+    return redirect("/verification")
+
+
+@app.route("/verification", methods=["POST", "GET"])
+def verification():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
+
+    if session.get("userinfo") == None:
+        return redirect(url_for('homepage'))
+        
+    if request.method == "GET":
+        return render_template("customers/auth/verification.html", shopname=envs.SHOPNAME, email=session["userinfo"]["email"], register=True)
+    
+    code = request.form.get("code")
+    if not code:
+        return render_template("customers/auth/verification.html", shopname=envs.SHOPNAME, email=session["userinfo"]["email"], register=True, verification_code_error="enter verification code")
+    
+    if code != session["userinfo"]["code"]:
+        return render_template("customers/auth/verification.html", shopname=envs.SHOPNAME, email=session["userinfo"]["email"], register=True, verification_code_error="incorrect verification code")
+
+    user = User(email=session["userinfo"]["email"], password=session["userinfo"]["password"], username=session["userinfo"]["username"])
+    db.session.add(user)
+    db.session.commit()
+
+    message1 = f"<h1 style='text-align: center;'>{envs.SHOPNAME}</h1>"
+    message2 = "<h2 style='text-align: center;'>Registration Successful</h2>"
+    m = message1 + message2
+    util.sendmail(session["userinfo"]["email"], "Confirmation", m)
+
+    session["userinfo"].clear()
+    session["userinfo"] = None
+
+    return redirect("/login")
 
 
 if __name__ == '__main__':
