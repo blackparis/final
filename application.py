@@ -574,6 +574,17 @@ def homepage():
     return render_template("customers/homepage.html", shopname=envs.SHOPNAME, customer=session["customer"], products=session["context"]["products"], categories=session["context"]["categories"], cart=session["cart"], amount=session["totalprice"])
 
 
+@app.route("/ifcart")
+def ifcart():
+    if session.get("customer") == None:
+        return jsonify({"success": False})
+    
+    if session.get("cart") == None or session["cart"] == {}:
+        return jsonify({"success": False})
+    
+    return jsonify({"success": True})
+
+
 @app.route("/cart/add/<int:pid>", methods=["POST"])
 def addToCart(pid):
     if session.get("customer") == None:
@@ -661,6 +672,9 @@ def removeCartItem(name):
     session["totalprice"] = session["totalprice"] - session["cart"][name]["amount"]
     del session["cart"][name]
 
+    if session["totalprice"] == 0 and session["cart"] == {}:
+        session["cart"] = None
+
     return redirect(url_for('homepage'))
 
 
@@ -677,6 +691,9 @@ def removeFromCart(name):
 
     session["totalprice"] = session["totalprice"] - session["cart"][name]["amount"]
     del session["cart"][name]
+
+    if session["totalprice"] == 0 and session["cart"] == {}:
+        session["cart"] = None
 
     return jsonify({"success": True, "amount": session["totalprice"]})
 

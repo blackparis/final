@@ -7,42 +7,33 @@
 {% block script %}
     <script src="{{ url_for('static', filename='customers/homepage.js') }}"></script>
     <script id="cart_row" type="text/x-handlebars-template">
-        {% raw -%}
-        <div class="row">
-            <div class="col-lg-10">
-                <p>Your Cart</p>
-                <table class="table">
-                    <tr>
-                        <th>Name</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Amount</th>
-                        <th>Remove</th>
-                    </tr>
-                    {{#each items}}
-                    <tr id="{{this.name}}">
-                        <td>{{ this.name }}</td>
-                        <td>Rs {{ this.price }} / {{ this.unit }}</td>
-                        <td>{{ this.qty }}</td>
-                        <td>Rs. {{ this.amount }}</td>
-                        <td><a href="/remove/cart/{{this.name}}" class="removeFromCart" data-name="{{ this.name }}">Remove</a></td>
-                    </tr>
-                    {{/each}}
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <td><b>Total</b></td>
-                        <td><b>Rs. <span id="cartprice">{{ amount }}</span></b></td>
-                        <td></td>
-                    </tr>
-                </table>
-            </div>
-            <div class="col-lg-2" style="padding: 40px;">
-                <button type="submit" class="btn btn-success">Buy</button><br><br>
-                <a href="/clearcart" id="erasecart">Clear Cart</a>        
-            </div>
-        </div>
-        <hr>
+        {% raw -%}        
+            <p>Your Cart</p>
+            <table class="table">
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Amount</th>
+                    <th>Remove</th>
+                </tr>
+                {{#each items}}
+                <tr id="{{this.name}}">
+                    <td>{{ this.name }}</td>
+                    <td>Rs {{ this.price }} / {{ this.unit }}</td>
+                    <td>{{ this.qty }}</td>
+                    <td>Rs. {{ this.amount }}</td>
+                    <td><a href="/remove/cart/{{this.name}}" class="removeFromCart" data-name="{{ this.name }}">Remove</a></td>
+                </tr>
+                {{/each}}
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td><b>Total</b></td>
+                    <td><b>Rs. <span id="cartprice">{{ amount }}</span></b></td>
+                    <td></td>
+                </tr>
+            </table>
         {%- endraw %}
     </script>
 {% endblock %}
@@ -59,10 +50,10 @@
 
 
 {% block body %}
-    <div id="cart_table" style="text-align: center;">
-        {% if cart %}
+    <div style="text-align: center;" id="cartdivision">
         <div class="row">
-            <div class="col-lg-10">
+            <div class="col-lg-10" id="cart_table" >
+                {% if cart %}
                 <p>Your Cart</p>
                 <table class="table">
                     <tr>
@@ -88,15 +79,17 @@
                         <td><b>Rs. <span id="cartprice">{{ amount }}</span></b></td>
                         <td></td>
                     </tr>
-                </table>            
+                </table>
+                {% endif %}
             </div>
-            <div class="col-lg-2" style="padding: 40px;">
-                <button type="submit" class="btn btn-success">Buy</button><br><br>
+            <div class="col-lg-2">
+                <div style="padding: 30px;">
+                    <button type="submit" class="btn btn-success">Buy</button>
+                </div>
                 <a href="{{ url_for('clearcart') }}" id="erasecart">Clear Cart</a>
             </div>
         </div>
-        <hr>
-        {% endif %}
+        <hr>        
     </div>
 
     

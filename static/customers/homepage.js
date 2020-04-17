@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    checkcart()
     document.querySelectorAll(".categories").forEach(link => {
         link.onclick = ()=> {
             let selectedCategory = link.dataset.category;
@@ -46,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let res = JSON.parse(request.responseText);
             if (res.success) {
                 document.querySelector("#cart_table").innerHTML = '';
+                document.querySelector("#cartdivision").style.display = "none";
             } else {
                 alert(res.message);
             }
@@ -62,6 +64,7 @@ function add2cart(pid, qty, template) {
     request.onload = () => {
         let res = JSON.parse(request.responseText);
         if (res.success) {
+            document.querySelector("#cartdivision").style.display = "block";
             let cart_row = template({'items': res.cart, 'amount': res.amount});
             document.querySelector("#cart_table").innerHTML = cart_row;
         } else {
@@ -79,6 +82,7 @@ function removeFromCart(name) {
         if (res.success) {
             if (res.amount === 0) {
                 document.querySelector("#cart_table").innerHTML = '';
+                document.querySelector("#cartdivision").style.display = "none";
             } else {
                 document.getElementById(name).remove();
                 document.querySelector("#cartprice").innerHTML = res.amount;;
@@ -86,6 +90,20 @@ function removeFromCart(name) {
         } else {
             alert(res.message);
         }
+    };
+    request.send();
+}
+
+function checkcart() {
+    const request = new XMLHttpRequest();
+    request.open('GET', "/ifcart");
+    request.onload = () => {
+        let res = JSON.parse(request.responseText);
+        let d = document.querySelector("#cartdivision");
+        if (res.success)
+            d.style.display = "block";
+        else
+            d.style.display = "none";
     };
     request.send();
 }
