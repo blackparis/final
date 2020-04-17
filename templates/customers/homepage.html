@@ -23,7 +23,7 @@
                     <td>Rs {{ this.price }} / {{ this.unit }}</td>
                     <td>{{ this.qty }}</td>
                     <td>Rs. {{ this.amount }}</td>
-                    <td><a href="/remove/cart/{{this.name}}" class="removeFromCart" data-name="{{ this.name }}">Remove</a></td>
+                    <td><a class="removeFromCart" data-name="{{ this.name }}"><button type="button" class="btn btn-danger btn-sm" onclick="removeFromCart('{{this.name}}')">Remove</button></a></td>
                 </tr>
                 {{/each}}
                 <tr>
@@ -69,7 +69,7 @@
                         <td>Rs {{ details['price'] }} / {{ details['unit'] }}</td>
                         <td>{{ details['qty'] }}</td>
                         <td>Rs. {{ details['amount'] }}</td>
-                        <td><a href="{{ url_for('removeCartItem', name=item) }}" class="removeFromCart" data-name="{{ item }}">Remove</a></td>
+                        <td><a href="{{ url_for('removeCartItem', name=item) }}" class="removeFromCart" data-name="{{ item }}"><button type="button" class="btn btn-danger btn-sm">Remove</button></a></td>
                     </tr>
                     {% endfor %}
                     <tr>
@@ -83,7 +83,8 @@
                 {% endif %}
             </div>
             <div class="col-lg-2">
-                <div style="padding: 30px;">
+                <p></p>
+                <div style="padding: 45px;">
                     <button type="submit" class="btn btn-success">Buy</button>
                 </div>
                 <a href="{{ url_for('clearcart') }}" id="erasecart">Clear Cart</a>
