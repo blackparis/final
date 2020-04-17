@@ -681,7 +681,34 @@ def removeFromCart(name):
     return jsonify({"success": True, "amount": session["totalprice"]})
 
 
+@app.route("/clearcart")
+def clearcart():
+    if session.get("customer") == None:
+        return redirect(url_for('homepage'))
 
+    if session.get("cart") == None:
+        return redirect(url_for('homepage'))
+
+    session["cart"].clear()
+    session["cart"] = None
+    session["totalprice"] = 0
+
+    return redirect(url_for('homepage'))
+
+
+@app.route("/erasecart")
+def erasecart():
+    if session.get("customer") == None:
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    if session.get("cart") == None:
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    session["cart"].clear()
+    session["cart"] = None
+    session["totalprice"] = 0
+
+    return jsonify({"success": True})
 
 
 

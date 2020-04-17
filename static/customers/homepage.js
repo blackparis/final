@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         return false;
     };
-    
+
     const cart_row_template = Handlebars.compile(document.querySelector('#cart_row').innerHTML);
     document.querySelectorAll(".cart").forEach(item => {
         item.onsubmit = ()=> {
@@ -38,6 +38,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return false;
         };
     });
+
+    document.querySelector("#erasecart").onclick = ()=> {
+        const request = new XMLHttpRequest();
+        request.open('GET', "/erasecart");
+        request.onload = () => {
+            let res = JSON.parse(request.responseText);
+            if (res.success) {
+                document.querySelector("#cart_table").innerHTML = '';
+            } else {
+                alert(res.message);
+            }
+        };
+        request.send();
+        return false;
+    };
 });
 
 

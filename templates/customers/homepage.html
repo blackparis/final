@@ -9,10 +9,7 @@
     <script id="cart_row" type="text/x-handlebars-template">
         {% raw -%}
         <div class="row">
-            <div class="col-lg-3">
-        
-            </div>
-            <div class="col-lg-7">
+            <div class="col-lg-10">
                 <p>Your Cart</p>
                 <table class="table">
                     <tr>
@@ -40,8 +37,9 @@
                     </tr>
                 </table>
             </div>
-            <div class="col-lg-2">
-        
+            <div class="col-lg-2" style="padding: 40px;">
+                <button type="submit" class="btn btn-success">Buy</button><br><br>
+                <a href="/clearcart" id="erasecart">Clear Cart</a>        
             </div>
         </div>
         <hr>
@@ -55,6 +53,7 @@
         .flex-container > div {padding: 5px;}
         #thumbnail {height: 150px;}
         .table {width: 100%;}
+        .table td {padding: 5px;}
     </style>
 {% endblock %}
 
@@ -63,10 +62,7 @@
     <div id="cart_table" style="text-align: center;">
         {% if cart %}
         <div class="row">
-            <div class="col-lg-3">
-
-            </div>
-            <div class="col-lg-7">
+            <div class="col-lg-10">
                 <p>Your Cart</p>
                 <table class="table">
                     <tr>
@@ -94,8 +90,9 @@
                     </tr>
                 </table>            
             </div>
-            <div class="col-lg-2">
-
+            <div class="col-lg-2" style="padding: 40px;">
+                <button type="submit" class="btn btn-success">Buy</button><br><br>
+                <a href="{{ url_for('clearcart') }}" id="erasecart">Clear Cart</a>
             </div>
         </div>
         <hr>
