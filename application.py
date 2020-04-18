@@ -557,10 +557,10 @@ def fetch_products():
     return {"products": PRODUCTS, "categories": categories}
 
 
-def load_cart():
+def load_cart(username):
     session["cart"] = {}
     session["totalprice"] = 0
-    transactions = Transaction.query.filter_by(status="INCART").all()
+    transactions = Transaction.query.filter_by(status="INCART").filter_by(username=username).all()
     for t in transactions:
         p = Product.query.get(t.product_id)
         session["cart"][p.name] = {
@@ -580,7 +580,7 @@ def homepage():
         return redirect(url_for('login'))
 
     if session.get("cart") == None:
-        load_cart()
+        load_cart(session["customer"])
     
     if session.get("context") == None:
         #context = fetch_products()
@@ -618,7 +618,9 @@ def addToCart(pid):
     if p == None:
         return redirect(url_for('homepage'))
 
-    if p.stock < qty:
+    if p.stock <= 0:
+        return redirect(url_for('homepage'))
+    elif p.stock < qty:
         return redirect(url_for('homepage'))
 
     if session.get("cart") == None:
@@ -633,14 +635,14 @@ def addToCart(pid):
         session["cart"][p.name] = {"name": p.name, "price": p.price, "unit": p.unit, "qty": QTY, "amount": ((p.price)*(QTY))}
         session["totalprice"] = session["totalprice"] + ((p.price)*qty)
         amt = ((p.price)*(QTY))
-        t = Transaction.query.filter_by(product_id=p.id).filter_by(status="INCART").first()
+        t = Transaction.query.filter_by(product_id=p.id).filter_by(status="INCART").filter_by(username=session["customer"]).first()
         t.qty = QTY
         t.amount = amt
     else:
         session["cart"][p.name] = {"name": p.name, "price": p.price, "unit": p.unit, "qty": qty, "amount": ((p.price)*qty)}        
         session["totalprice"] = session["totalprice"] + ((p.price)*qty)
         amt = ((p.price)*qty)
-        t = Transaction(product_id=p.id, qty=qty, amount=amt)
+        t = Transaction(username=session["customer"], product_id=p.id, qty=qty, amount=amt)
         db.session.add(t)
 
     db.session.commit()
@@ -648,7 +650,6 @@ def addToCart(pid):
     return redirect(url_for('homepage'))
 
 
-# Add products to cart with Java Script code.
 @app.route("/add2cart/<pid>/<qty>")
 def add2cart(pid, qty):
     if session.get("customer") == None:
@@ -664,8 +665,10 @@ def add2cart(pid, qty):
     if p == None:
         return jsonify({"success": False, "message": "Product Does Not Exist"})
 
-    if p.stock < qty:
-        return jsonify({"success": False, "message": f"{qty} {p.unit} not available.\nTry a smaller amount."})
+    if p.stock <= 0:
+        return jsonify({"success": False, "message": f"{p.name} is out of Stock."})
+    elif p.stock < qty:
+        return jsonify({"success": False, "message": f"Only {p.stock} {p.unit}(s) of {p.name}(s) is/are available."})
 
     if session.get("cart") == None:
         session["cart"] = {}
@@ -674,19 +677,19 @@ def add2cart(pid, qty):
     if p.name in session["cart"]:
         QTY = session["cart"][p.name]["qty"] + qty
         if p.stock < QTY:
-            return jsonify({"success": False, "message": f"{qty} {p.unit} not available.\nTry a smaller amount."})
+            return jsonify({"success": False, "message": f"Only {p.stock} {p.unit}(s) of {p.name}(s) is/are available."})
         session["cart"][p.name].clear()
         session["cart"][p.name] = {"name": p.name, "price": p.price, "unit": p.unit, "qty": QTY, "amount": ((p.price)*(QTY))}
         session["totalprice"] = session["totalprice"] + ((p.price)*qty)
         amt = ((p.price)*(QTY))
-        t = Transaction.query.filter_by(product_id=p.id).filter_by(status="INCART").first()
+        t = Transaction.query.filter_by(product_id=p.id).filter_by(status="INCART").filter_by(username=session["customer"]).first()
         t.qty = QTY
         t.amount = amt
     else:
         session["cart"][p.name] = {"name": p.name, "price": p.price, "unit": p.unit, "qty": qty, "amount": ((p.price)*qty)}
         session["totalprice"] = session["totalprice"] + ((p.price)*qty)
         amt = ((p.price)*(qty))
-        t = Transaction(product_id=p.id, qty=qty, amount=amt)
+        t = Transaction(username=session["customer"], product_id=p.id, qty=qty, amount=amt)
         db.session.add(t)
 
     db.session.commit()
@@ -713,14 +716,13 @@ def removeCartItem(name):
         session["cart"] = None
 
     p = Product.query.filter_by(name=name).first()
-    t = Transaction.query.filter_by(product_id=p.id).filter_by(status="INCART").first()
+    t = Transaction.query.filter_by(product_id=p.id).filter_by(status="INCART").filter_by(username=session["customer"]).first()
     db.session.delete(t)
     db.session.commit()
 
     return redirect(url_for('homepage'))
 
 
-# Remove items from cart with Java Script code.
 @app.route("/cart/remove/<name>")
 def removeFromCart(name):
     if session.get("customer") == None:
@@ -739,7 +741,7 @@ def removeFromCart(name):
         session["cart"] = None
 
     p = Product.query.filter_by(name=name).first()
-    t = Transaction.query.filter_by(product_id=p.id).filter_by(status="INCART").first()
+    t = Transaction.query.filter_by(product_id=p.id).filter_by(status="INCART").filter_by(username=session["customer"]).first()
     db.session.delete(t)
     db.session.commit()
 
@@ -759,7 +761,7 @@ def clearcart():
     session["cart"] = None
     session["totalprice"] = 0
 
-    transactions = Transaction.query.filter_by(status="INCART").all()
+    transactions = Transaction.query.filter_by(status="INCART").filter_by(username=session["customer"]).all()
     for t in transactions:
         db.session.delete(t)
 
@@ -768,7 +770,6 @@ def clearcart():
     return redirect(url_for('homepage'))
 
 
-# Empty cart with Java Script Code.
 @app.route("/erasecart")
 def erasecart():
     if session.get("customer") == None:
@@ -781,7 +782,7 @@ def erasecart():
     session["cart"] = None
     session["totalprice"] = 0
 
-    transactions = Transaction.query.filter_by(status="INCART").all()
+    transactions = Transaction.query.filter_by(status="INCART").filter_by(username=session["customer"]).all()
     for t in transactions:
         db.session.delete(t)
 
@@ -790,16 +791,125 @@ def erasecart():
     return jsonify({"success": True})
 
 
-@app.route("/buy")
+@app.route("/buy", methods=["POST", "GET"])
 def placeorder():
+    if request.method == "GET":
+        if session.get("customer") == None:
+            return redirect(url_for('login'))
+    
+        if session.get("cart") == None or session["cart"] == {}:
+            return redirect(url_for('homepage'))
+
+        user = User.query.filter_by(username=session["customer"]).first()
+        if user == None:
+            return redirect(url_for('login'))
+        
+        addresses = user.addresses
+        if len(addresses) == 0:
+            return redirect(url_for('address'))
+
+        cart = session["cart"].copy()
+        message = []
+        for key, value in cart.items():
+            p = Product.query.filter_by(name=key).first()
+            if p.stock <= 0:
+                session["totalprice"] -= session["cart"][p.name]["amount"]
+                del session["cart"][p.name]
+                tr = Transaction.query.filter_by(status="INCART").filter_by(username=session["customer"]).filter_by(product_id=p.id).first()
+                #tr.status = "NOT AVAILABLE"
+                db.session.delete(tr)
+                message.append(f"{p.name} is out of Stock.")
+            elif p.stock < value["qty"]:
+                diff = value["qty"] - p.stock
+                session["totalprice"] -= (diff*(p.price))
+                session["cart"][p.name]["qty"] = p.stock
+                session["cart"][p.name]["amount"] = ((p.stock)*(p.price))
+                tr = Transaction.query.filter_by(status="INCART").filter_by(username=session["customer"]).filter_by(product_id=p.id).first()
+                tr.qty = p.stock
+                tr.amount = ((p.stock)*(p.price))
+                message.append(f"Only {p.stock} {p.unit}(s) of {p.name}(s) is/are available.")
+
+        db.session.commit()
+        return render_template("customers/buy.html", shopname=envs.SHOPNAME, customer=session["customer"], cart=session["cart"], amount=session["totalprice"], addresses=addresses, messages=message)
+        
+    address = request.form.get("address")
+    time = request.form.get("time")
+
+    if not time:
+        time = None
+
+    if not address:
+        return jsonify({"success": False, "message": "Select a Delivery Address"})
+
+    try:
+        address = int(address)
+    except:
+        return jsonify({"success": False, "message": "Invalid Request"})
+    
+    while True:
+        code = random.randint(100000, 9999999)
+        o = Order.query.filter_by(code=code).first()
+        if o == None:
+            break
+
+    order_time = datetime.now()
+    o = Order(
+        username=session["customer"],
+        addressID=address,
+        amount=session["totalprice"],
+        order_time=order_time,
+        prefered_time=time,
+        code=code
+    )
+    db.session.add(o)
+
+    tr = Transaction.query.filter_by(status="INCART").filter_by(username=session["customer"]).all()
+    for t in tr:
+        p = Product.query.get(t.product_id)
+        p.stock -= t.qty
+        t.status = "ORDERED"
+        t.code = code
+    
+    db.session.commit()
+    
+    session["cart"].clear()
+    session["cart"] = None
+    session["totalprice"] = 0
+
+    return jsonify({"success": True, "message": code})
+
+
+@app.route("/address", methods=["POST", "GET"])
+def address():
     if session.get("customer") == None:
         return redirect(url_for('login'))
-    
-    if session.get("cart") == None or session["cart"] == {}:
-        return redirect(url_for('homepage'))
-    
-    return "TODO"
 
+    if request.method == "GET":
+        return render_template("customers/address.html", shopname=envs.SHOPNAME, customer=session["customer"])
+
+    name = request.form.get("name")
+    mobile = request.form.get("mobile")
+    address = request.form.get("address")
+    city = request.form.get("city")
+    state = request.form.get("state")
+    pincode = request.form.get("pincode")
+    country = request.form.get("country")
+
+    if not name or not mobile or not address or not city or not state or not pincode or not country:
+        return render_template("customers/address.html", shopname=envs.SHOPNAME, customer=session["customer"], address_form_error="fill in all fields marked with *")
+
+    name = name.strip().title()
+    mobile = mobile.strip()
+    address = address.strip().title()
+    city = city.strip().title()
+    state = state.strip().title()
+    pincode = pincode.strip()
+    country = country.strip().title()
+
+    a = Address(username=session["customer"], name=name, mobile=mobile, address=address, city=city, state=state, pincode=pincode, country=country)
+    db.session.add(a)
+    db.session.commit()
+    return redirect("/buy")
 
 
 

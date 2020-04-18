@@ -1,0 +1,94 @@
+{% extends "customers/layout.html" %}
+
+{% block title %}
+    confirm Order
+{% endblock %}
+
+{% block script %}
+    <script src="{{ url_for('static', filename='customers/buy.js') }}"></script>
+{% endblock %}
+
+{% block style %}
+    <style>
+
+    </style>
+{% endblock %}
+
+
+{% block body %}
+{% if cart %}
+<div style="text-align: center;" id="cartdivision">
+    <form action="{{ url_for('placeorder') }}" method="POST" id="orderconfirmation">
+        <div class="row">
+            <div class="col-lg-5" id="cart_table" >                
+                <p>Your Order</p>
+                <table class="table">
+                    <tr>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Amount</th>
+                    </tr>
+                    {% for item, details in cart.items() %}
+                    <tr id="{{ item }}">
+                        <td>{{ item }}</td>
+                        <td>Rs {{ details['price'] }} / {{ details['unit'] }}</td>
+                        <td>{{ details['qty'] }}</td>
+                        <td>Rs. {{ details['amount'] }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td><b>Total</b></td>
+                        <td><b>Rs. <span id="cartprice">{{ amount }}</span></b></td>
+                    </tr>
+                </table>                
+            </div>
+            
+            <div class="col-lg-4">
+                <p>Select or <a href="{{ url_for('address') }}"><b>Add</b></a> a Delivery Address</p>
+                {% for address in addresses %}
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="address" class="address" value="{{ address.id }}">
+                            <div>{{address.name}}</div>                            
+                            <div>{{address.address}}</div>
+                            <div>{{address.city}} {{address.state}} {{address.pincode}} {{address.country}}</div>
+                            <div>Contact Number: {{address.mobile}}</div>
+                        </label>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="col-lg-3">
+                <div style="text-align: center;">
+                    {% for m in messages %}
+                        <div style="color: red;">{{m}}</div>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label for="time">Prefered Delivery Time</label>
+                    <input type="text" class="form-control" id="time" name="time" autofocus autocomplete="off">
+                </div><br>
+                <button type="submit" class="btn btn-success">Confirm</button>
+                {% if buy_error %}
+                    <br>
+                    <div class="errorMessage">
+                        {{buy_error}}
+                    </div>
+                {% endif %}                
+            </div>            
+        </div>        
+    </form>    
+</div>
+<hr>
+{% else %}
+    <div style="text-align: center;">
+        {% for m in messages %}
+            <div>{{m}}</div>
+        {% endfor %}
+    </div>
+    <br>
+    <a href="{{ url_for('homepage') }}">Return to Homepage</a>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "customers/layout.html" %}
+
+{% block title %}
+    Add Address
+{% endblock %}
+
+{% block script %}
+    <script src="{{ url_for('static', filename='customers/address.js') }}"></script>
+{% endblock %}
+
+{% block style %}
+    <style>
+        #form_div {text-align: center; padding: 10px;}
+
+    </style>
+{% endblock %}
+
+
+{% block body %}
+<div id="form_div">
+    <p>Add a delivery address.</p>
+    <form action="{{ url_for('address') }}" method="POST" id="address_form">
+        <div class="row" style="text-align: center;">
+            <div class="col-lg-3">
+                <div class="form-group">
+                    <label for="name"><span class="requirement">*</span>Name</label>
+                    <input type="text" class="form-control" id="name" name="name" autocomplete="off" autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="mobile"><span class="requirement">*</span>Contact Number</label>
+                    <input type="text" class="form-control" id="mobile" name="mobile" autocomplete="off">
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="form-group">
+                    <label for="address"><span class="requirement">*</span>Address</label>
+                    <textarea class="form-control" rows="5" id="address" name="address"></textarea>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="form-group">
+                    <label for="city"><span class="requirement">*</span>City</label>
+                    <input type="text" class="form-control" id="city" name="city" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="pincode"><span class="requirement">*</span>Pincode</label>
+                    <input type="text" class="form-control" id="pincode" name="pincode" autocomplete="off">
+                </div>
+            </div>            
+            <div class="col-lg-3">
+                <div class="form-group">
+                    <label for="state"><span class="requirement">*</span>State</label>
+                    <input type="text" class="form-control" id="state" name="state" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="country"><span class="requirement">*</span>Country</label>
+                    <input type="text" class="form-control" id="country" name="country" autocomplete="off">
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success">Add</button>
+    </form>
+    {% if address_form_error %}
+        <div class=errorMessage>
+            {{address_form_error}}            
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

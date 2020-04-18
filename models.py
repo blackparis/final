@@ -11,6 +11,8 @@ class User(db.Model):
     email = db.Column(db.String, nullable=False, unique=True)
     password = db.Column(db.String, nullable=False)
     username = db.Column(db.String, nullable=False, unique=True)
+    addresses = db.relationship("Address", lazy=True)
+    orders = db.relationship("Order", lazy=True)
 
 class Product(db.Model):
     __tablename__ = "products"
@@ -45,8 +47,7 @@ class Address(db.Model):
     username = db.Column(db.String, db.ForeignKey("users.username"), nullable=False)
     name = db.Column(db.String, nullable=False)
     mobile = db.Column(db.String, nullable=False)
-    address1 = db.Column(db.String, nullable=False)
-    address2 = db.Column(db.String, nullable=True)
+    address = db.Column(db.String, nullable=False)
     city = db.Column(db.String, nullable=False)
     state = db.Column(db.String, nullable=False)
     pincode = db.Column(db.String, nullable=False)
@@ -72,6 +73,7 @@ class Transaction(db.Model):
     __tablename__ = "transactions"
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
+    username = db.Column(db.String, db.ForeignKey("users.username"), nullable=False)
     qty = db.Column(db.Float, nullable=False)
     amount = db.Column(db.Float, nullable=False)
     status = db.Column(db.String, nullable=False, default="INCART")
