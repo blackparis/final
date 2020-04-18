@@ -85,7 +85,7 @@
             <div class="col-lg-2">
                 <p></p>
                 <div style="padding: 45px;">
-                    <button type="submit" class="btn btn-success">Buy</button>
+                    <a href="{{ url_for('placeorder') }}"><button type="submit" class="btn btn-success" id="placeorder">Buy</button></a>
                 </div>
                 <a href="{{ url_for('clearcart') }}" id="erasecart">Clear Cart</a>
             </div>

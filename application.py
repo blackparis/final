@@ -557,14 +557,30 @@ def fetch_products():
     return {"products": PRODUCTS, "categories": categories}
 
 
+def load_cart():
+    session["cart"] = {}
+    session["totalprice"] = 0
+    transactions = Transaction.query.filter_by(status="INCART").all()
+    for t in transactions:
+        p = Product.query.get(t.product_id)
+        session["cart"][p.name] = {
+            "name": p.name,
+            "price": p.price,
+            "unit": p.unit,
+            "qty": t.qty,
+            "amount": t.amount
+        }
+        session["totalprice"] += t.amount
+    return
+
+
 @app.route("/")
 def homepage():
     if session.get("customer") == None:
         return redirect(url_for('login'))
 
     if session.get("cart") == None:
-        session["cart"] = {}
-        session["totalprice"] = 0
+        load_cart()
     
     if session.get("context") == None:
         #context = fetch_products()
@@ -585,6 +601,7 @@ def ifcart():
     return jsonify({"success": True})
 
 
+# Add products to cart without Java Script code.
 @app.route("/cart/add/<int:pid>", methods=["POST"])
 def addToCart(pid):
     if session.get("customer") == None:
@@ -615,13 +632,23 @@ def addToCart(pid):
         session["cart"][p.name].clear()
         session["cart"][p.name] = {"name": p.name, "price": p.price, "unit": p.unit, "qty": QTY, "amount": ((p.price)*(QTY))}
         session["totalprice"] = session["totalprice"] + ((p.price)*qty)
+        amt = ((p.price)*(QTY))
+        t = Transaction.query.filter_by(product_id=p.id).filter_by(status="INCART").first()
+        t.qty = QTY
+        t.amount = amt
     else:
-        session["cart"][p.name] = {"name": p.name, "price": p.price, "unit": p.unit, "qty": qty, "amount": ((p.price)*qty)}
+        session["cart"][p.name] = {"name": p.name, "price": p.price, "unit": p.unit, "qty": qty, "amount": ((p.price)*qty)}        
         session["totalprice"] = session["totalprice"] + ((p.price)*qty)
+        amt = ((p.price)*qty)
+        t = Transaction(product_id=p.id, qty=qty, amount=amt)
+        db.session.add(t)
+
+    db.session.commit()
 
     return redirect(url_for('homepage'))
 
 
+# Add products to cart with Java Script code.
 @app.route("/add2cart/<pid>/<qty>")
 def add2cart(pid, qty):
     if session.get("customer") == None:
@@ -651,13 +678,23 @@ def add2cart(pid, qty):
         session["cart"][p.name].clear()
         session["cart"][p.name] = {"name": p.name, "price": p.price, "unit": p.unit, "qty": QTY, "amount": ((p.price)*(QTY))}
         session["totalprice"] = session["totalprice"] + ((p.price)*qty)
+        amt = ((p.price)*(QTY))
+        t = Transaction.query.filter_by(product_id=p.id).filter_by(status="INCART").first()
+        t.qty = QTY
+        t.amount = amt
     else:
         session["cart"][p.name] = {"name": p.name, "price": p.price, "unit": p.unit, "qty": qty, "amount": ((p.price)*qty)}
         session["totalprice"] = session["totalprice"] + ((p.price)*qty)
+        amt = ((p.price)*(qty))
+        t = Transaction(product_id=p.id, qty=qty, amount=amt)
+        db.session.add(t)
+
+    db.session.commit()
 
     return jsonify({"success": True, "cart": session["cart"], "amount": session["totalprice"]})
 
 
+# Remove items from cart without Java Script code.
 @app.route("/remove/cart/<name>")
 def removeCartItem(name):
     if session.get("customer") == None:
@@ -675,9 +712,15 @@ def removeCartItem(name):
     if session["totalprice"] == 0 and session["cart"] == {}:
         session["cart"] = None
 
+    p = Product.query.filter_by(name=name).first()
+    t = Transaction.query.filter_by(product_id=p.id).filter_by(status="INCART").first()
+    db.session.delete(t)
+    db.session.commit()
+
     return redirect(url_for('homepage'))
 
 
+# Remove items from cart with Java Script code.
 @app.route("/cart/remove/<name>")
 def removeFromCart(name):
     if session.get("customer") == None:
@@ -695,9 +738,15 @@ def removeFromCart(name):
     if session["totalprice"] == 0 and session["cart"] == {}:
         session["cart"] = None
 
+    p = Product.query.filter_by(name=name).first()
+    t = Transaction.query.filter_by(product_id=p.id).filter_by(status="INCART").first()
+    db.session.delete(t)
+    db.session.commit()
+
     return jsonify({"success": True, "amount": session["totalprice"]})
 
 
+# Empty cart without Java Script Code.
 @app.route("/clearcart")
 def clearcart():
     if session.get("customer") == None:
@@ -710,9 +759,16 @@ def clearcart():
     session["cart"] = None
     session["totalprice"] = 0
 
+    transactions = Transaction.query.filter_by(status="INCART").all()
+    for t in transactions:
+        db.session.delete(t)
+
+    db.session.commit()
+
     return redirect(url_for('homepage'))
 
 
+# Empty cart with Java Script Code.
 @app.route("/erasecart")
 def erasecart():
     if session.get("customer") == None:
@@ -725,7 +781,26 @@ def erasecart():
     session["cart"] = None
     session["totalprice"] = 0
 
+    transactions = Transaction.query.filter_by(status="INCART").all()
+    for t in transactions:
+        db.session.delete(t)
+
+    db.session.commit()
+
     return jsonify({"success": True})
+
+
+@app.route("/buy")
+def placeorder():
+    if session.get("customer") == None:
+        return redirect(url_for('login'))
+    
+    if session.get("cart") == None or session["cart"] == {}:
+        return redirect(url_for('homepage'))
+    
+    return "TODO"
+
+
 
 
 
