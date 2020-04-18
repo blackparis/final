@@ -155,6 +155,7 @@ def admin_edit_tags(name):
         tag.tag5 = None
 
     db.session.commit()
+    get_products()
     session["products"][p.name]["tags"].clear()
     session["products"][p.name]["tags"] = t
     return redirect(url_for('admin_products_details'))
@@ -212,6 +213,7 @@ def admin_add_tags(name):
     tags = Tags(product_id=p.id, tag1=tag1, tag2=tag2, tag3=tag3, tag4=tag4, tag5=tag5)
     db.session.add(tags)
     db.session.commit()
+    get_products()
     session["products"][p.name]["tags"] = t
     return redirect(url_for('admin_products_details'))
 
@@ -537,6 +539,8 @@ def admin_cancel_order(orderid):
     if order.status != "FOR CANCELLATION":
         return jsonify({"success": False, "message": "Invalid Request"})
 
+    get_products()
+    
     cancellation_time = datetime.now()
     order.status = "CANCELLED"
     order.prefered_time = None
@@ -546,6 +550,7 @@ def admin_cancel_order(orderid):
     for tr in trs:
         p = Product.query.get(tr.product_id)
         p.stock += tr.qty
+        session["products"][p.name]["qty"] = p.stock
 
     db.session.commit()
 
