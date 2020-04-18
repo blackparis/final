@@ -491,6 +491,65 @@ def newproducts():
     return jsonify({"success": False})
 
 
+def get_admin_orders():
+    allorders = []
+    orders = Order.query.order_by(Order.order_time.desc()).all()
+    for order in orders:
+        products = []
+        transactions = order.transactions
+        for t in transactions:
+            p = Product.query.get(t.product_id)
+            tr = {"name": p.name, "price": p.price, "unit": p.unit, "qty": t.qty, "amount": t.amount}
+            products.append(tr)
+        address = Address.query.get(order.addressID)
+        o = {"order": order, "transactions": products, "address": address}
+        allorders.append(o)
+
+    return allorders
+
+
+@app.route("/admin/orders")
+def admin_orders():
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+
+    orders = get_admin_orders()
+
+    return render_template("admin/orders.html", shopname=envs.SHOPNAME, admin=session["admin"], orders=orders)
+
+
+@app.route("/admin/cancelorder/<int:orderid>")
+def admin_cancel_order(orderid):
+    if not session.get("admin"):
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    try:
+        oid = int(orderid)
+    except:
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    order = Order.query.get(oid)
+    if order == None:
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    if order.status != "FOR CANCELLATION":
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    cancellation_time = datetime.now()
+    order.status = "CANCELLED"
+    order.prefered_time = None
+    order.delivery_time = None
+    order.cancellation_time = cancellation_time
+    trs = order.transactions
+    for tr in trs:
+        p = Product.query.get(tr.product_id)
+        p.stock += tr.qty
+
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
 @app.route("/admin/login", methods=["POST", "GET"])
 def admin_login():
     if session.get("admin"):

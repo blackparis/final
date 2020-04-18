@@ -24,7 +24,7 @@
                         {% if admin %}
                             <a href="{{ url_for('admin_products') }}">Products</a>&nbsp;&nbsp;
                             <a href="#">Customers</a>&nbsp;&nbsp;
-                            <a href="#">Orders</a>&nbsp;&nbsp;
+                            <a href="{{ url_for('admin_orders') }}">Orders</a>&nbsp;&nbsp;
                             <a href="#">Messages</a>&nbsp;&nbsp;
                         {% endif %}
                     </div>
