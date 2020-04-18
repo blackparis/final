@@ -70,7 +70,8 @@
                     <label for="time">Prefered Delivery Time</label>
                     <input type="text" class="form-control" id="time" name="time" autofocus autocomplete="off">
                 </div><br>
-                <button type="submit" class="btn btn-success">Confirm</button>
+                <button type="submit" class="btn btn-success" id="confirmbutton">Confirm</button>
+                <div id="confirmationmessage" style="color: red;"></div>
                 {% if buy_error %}
                     <br>
                     <div class="errorMessage">
@@ -79,7 +80,7 @@
                 {% endif %}                
             </div>            
         </div>        
-    </form>    
+    </form>
 </div>
 <hr>
 {% else %}

@@ -1,22 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
     checkcart()
-    /*
-    document.querySelector("#placeorder").onclick = () => {
-        const request = new XMLHttpRequest();
-        request.open('GET', "/ifcart");
-        request.onload = () => {
-            let res = JSON.parse(request.responseText);
-            let d = document.querySelector("#cartdivision");
-            if (res.success) {
-                let message = `Your Order is Confirmed.\nTransaction ID: ${res.code}`;
-                alert(message);
-            } else {
-                alert("Sorry, we were not able to process your transaction.\nPlease try after some time.");                
-            }
-        };
-        request.send();
-    };*/
-
 
     document.querySelectorAll(".categories").forEach(link => {
         link.onclick = ()=> {
@@ -46,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let qty = document.getElementById(pid).value;
             add2cart(pid, qty, cart_row_template);
             document.getElementById(pid).value = "";
+            document.getElementById(pid).blur();
             return false;
         };
     });

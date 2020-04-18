@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    document.querySelector("#orderconfirmation").onsubmit = ()=> {
+    document.querySelector("#orderconfirmation").onsubmit = ()=> {        
         var address = false;
         document.querySelectorAll(".address").forEach(r => {
             if (r.checked === true) {
@@ -23,8 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
         request.onload = () => {
             let res = JSON.parse(request.responseText);
             if (res.success) {
+                document.querySelector("#confirmationmessage").innerHTML = "";
                 let message = `Your Order is Confirmed.\nTransaction ID: ${res.message}`;
-                alert(message);
+                alert(message);                
                 location.reload();
             } else {
                 alert(res.message);
@@ -35,6 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
         order.append('address', address);
         order.append('time', time);
         request.send(order);
+        document.querySelector("#confirmbutton").disabled = true;
+        document.querySelector("#confirmationmessage").innerHTML = "Please Wait";
         return false;
     };
 });
