@@ -29,8 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 request.onload = () => {
                     let res = JSON.parse(request.responseText);
                     if (res.success) {
+                        document.getElementById(notifid).innerHTML = "";
+                        let statusid = `status_${orderid}`;
+                        document.getElementById(statusid).innerHTML = res.message;
+                        document.getElementById(orderid).dataset.orderstatus = res.message;
+                        let preferedid = `preferedTime_${orderid}`;
+                        document.getElementById(preferedid).remove();
                         alert("Your request is under process.\nYou will be notified once your order is cancelled");
-                        location.reload();
                     }                    
                     else {
                         alert(res.message);

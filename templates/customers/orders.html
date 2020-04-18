@@ -19,9 +19,10 @@
 {% block body %}
 <div style="text-align: center;" id="sortstatus">
     <a id="allorderslink" href="">All</a>&nbsp;&nbsp;
-    {% for s in status %}
-        <a class="statuslinks" href="" data-status="{{ s }}">{{s}}</a>&nbsp;&nbsp;
-    {% endfor %}
+    <a class="statuslinks" href="" data-status="OPEN">OPEN</a>&nbsp;&nbsp;
+    <a class="statuslinks" href="" data-status="CANCELLED">CANCELLED</a>(<span>{{ countCN }}</span>)&nbsp;&nbsp;
+    <a class="statuslinks" href="" data-status="FOR CANCELLATION">FOR CANCELLATION</a>&nbsp;&nbsp;
+    <a class="statuslinks" href="" data-status="CLOSED">CLOSED</a>(<span>{{ countCL }}</span>)
 </div>
 <hr>
 <div>
@@ -36,7 +37,7 @@
                 {{ order['address'].pincode }}, {{ order['address'].country }}<br>
                 Contact Number: {{ order['address'].mobile }}
             </div>
-            <div class="col-lg-6">
+            <div class="col-lg-5">
                 <span style="color: green;"><b>Details</b></span><br>
                 <table id="cart_table" class="table">
                     <tr>
@@ -63,14 +64,14 @@
                     {% endif %}
                 </div>
             </div>    
-            <div class="col-lg-3">
+            <div class="col-lg-4">
                 <span style="color: green;"><b>Order Info</b></span><br>
                 <div>Username: <span style="color: brown;">{{ order['order'].username }}</span></div>
                 <div>Amount: {{ order['order'].amount }}</div>
                 <div>Time of Order: {{ order['order'].order_time }}</div>
                 <div>
                     {% if order['order'].delivery_time %}                
-                        Time of Delivery: {{ order['order'].delivery_time }}
+                        Dispatch Time: {{ order['order'].delivery_time }}
                     {% endif %}
                 </div>
                 <div>
@@ -78,7 +79,7 @@
                         Time of Cancellation: {{ order['order'].cancellation_time }}
                     {% endif %}
                 </div>
-                <div>
+                <div id="preferedTime_{{ order['order'].id }}">
                     {% if order['order'].prefered_time %}
                         Prefered Time of Delivery: {{ order['order'].prefered_time }}
                     {% endif %}

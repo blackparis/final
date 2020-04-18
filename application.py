@@ -514,8 +514,10 @@ def admin_orders():
         return redirect(url_for('admin_login'))
 
     orders = get_admin_orders()
+    countO = Order.query.filter_by(status="OPEN").count()
+    countCC = Order.query.filter_by(status="FOR CANCELLATION").count()
 
-    return render_template("admin/orders.html", shopname=envs.SHOPNAME, admin=session["admin"], orders=orders)
+    return render_template("admin/orders.html", shopname=envs.SHOPNAME, admin=session["admin"], orders=orders, countO=countO, countCC=countCC)
 
 
 @app.route("/admin/cancelorder/<int:orderid>")
@@ -547,7 +549,36 @@ def admin_cancel_order(orderid):
 
     db.session.commit()
 
-    return jsonify({"success": True})
+    return jsonify({"success": True, "cancellation_time": cancellation_time, "status": "CANCELLED"})
+
+
+@app.route("/admin/closeorder/<int:orderid>")
+def admin_close_order(orderid):
+    if not session.get("admin"):
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    try:
+        oid = int(orderid)
+    except:
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    order = Order.query.get(oid)
+    if order == None:
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    if order.status != "OPEN":
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    delivery_time = datetime.now()
+    order.status = "CLOSED"
+    order.delivery_time = delivery_time
+
+    db.session.commit()
+
+    return jsonify({"success": True, "delivery_time": delivery_time, "status": "CLOSED"})
+
+    
+
 
 
 @app.route("/admin/login", methods=["POST", "GET"])
@@ -976,7 +1007,6 @@ def address():
 
 def get_orders(username):
     allorders = []
-    status = []
     orders = Order.query.filter_by(username=username).order_by(Order.order_time.desc()).all()
     for order in orders:
         products = []
@@ -987,11 +1017,9 @@ def get_orders(username):
             products.append(tr)
         address = Address.query.get(order.addressID)
         o = {"order": order, "transactions": products, "address": address}
-        if order.status not in status:
-            status.append(order.status)
         allorders.append(o)
 
-    return {"orders": allorders, "status": status}
+    return allorders
 
 
 @app.route("/orders")
@@ -1000,7 +1028,9 @@ def orders():
         return redirect(url_for('login'))
     
     orders = get_orders(session["customer"])
-    return render_template("customers/orders.html", shopname=envs.SHOPNAME, customer=session["customer"], orders=orders["orders"], status=orders["status"])
+    countCL = Order.query.filter_by(status="CLOSED").filter_by(username=session["customer"]).count()
+    countCN = Order.query.filter_by(status="CANCELLED").filter_by(username=session["customer"]).count()
+    return render_template("customers/orders.html", shopname=envs.SHOPNAME, customer=session["customer"], orders=orders, countCL=countCL, countCN=countCN)
 
 
 @app.route("/cancel/order/<int:orderid>")
@@ -1024,8 +1054,9 @@ def cancel(orderid):
         return jsonify({"success": False, "message": "Invalid Request"})
 
     o.status = "FOR CANCELLATION"
+    o.prefered_time = None
     db.session.commit()
-    return jsonify({"success": True})
+    return jsonify({"success": True, "message": "FOR CANCELLATION"})
 
 
 @app.route("/login", methods=["POST", "GET"])

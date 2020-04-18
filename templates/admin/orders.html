@@ -1,7 +1,7 @@
 {% extends "admin/layout.html" %}
 
 {% block title %}
-    Homepage
+    Orders
 {% endblock %}
 
 {% block script %}
@@ -19,9 +19,9 @@
 {% block body %}
 <div style="text-align: center;" id="sortstatus">
     <a id="allorderslink" href="">All</a>&nbsp;&nbsp;
-    <a class="statuslinks" href="" data-status="OPEN">OPEN</a>&nbsp;&nbsp;
+    <a class="statuslinks" href="" data-status="OPEN">OPEN</a>(<span id="countOfOpenOrders">{{ countO }}</span>)&nbsp;&nbsp;
     <a class="statuslinks" href="" data-status="CANCELLED">CANCELLED</a>&nbsp;&nbsp;
-    <a class="statuslinks" href="" data-status="FOR CANCELLATION">FOR CANCELLATION</a>&nbsp;&nbsp;
+    <a class="statuslinks" href="" data-status="FOR CANCELLATION">FOR CANCELLATION</a>(<span id="countOfCancelletionRequests">{{ countCC }}</span>)&nbsp;&nbsp;
     <a class="statuslinks" href="" data-status="CLOSED">CLOSED</a>
 </div>
 <hr>
@@ -37,7 +37,7 @@
                 {{ order['address'].pincode }}, {{ order['address'].country }}<br>
                 Contact Number: {{ order['address'].mobile }}
             </div>
-            <div class="col-lg-6">
+            <div class="col-lg-5">
                 <span style="color: green;"><b>Details</b></span><br>
                 <table id="cart_table" class="table">
                     <tr>
@@ -55,7 +55,7 @@
                     </tr>
                     {% endfor %}
                 </table>
-                <div>
+                <div id="trlinks_{{order['order'].id}}">
                     {% if order['order'].status == "OPEN" %}
                         <button type="submit" class="btn btn-success" data-orderid="{{ order['order'].id }}">Close</button><br>
                         <span style="color: red;" id="closenotif_{{ order['order'].id }}"></span>
@@ -65,22 +65,22 @@
                     {% endif %}
                 </div>
             </div>    
-            <div class="col-lg-3">
+            <div class="col-lg-4">
                 <span style="color: green;"><b>Order Info</b></span><br>
                 <div>Username: <span style="color: brown;">{{ order['order'].username }}</span></div>
                 <div>Amount: {{ order['order'].amount }}</div>
                 <div>Time of Order: {{ order['order'].order_time }}</div>
-                <div>
+                <div id="dispatch_{{order['order'].id}}">
                     {% if order['order'].delivery_time %}                
-                        Time of Delivery: {{ order['order'].delivery_time }}
+                        Dispatch Time: {{ order['order'].delivery_time }}
                     {% endif %}
                 </div>
-                <div>
+                <div id="cancellation_{{order['order'].id}}">
                     {% if order['order'].cancellation_time %}
                         Time of Cancellation: {{ order['order'].cancellation_time }}
                     {% endif %}
                 </div>
-                <div>
+                <div id="prefered_{{order['order'].id}}">
                     {% if order['order'].prefered_time %}
                         Prefered Time of Delivery: {{ order['order'].prefered_time }}
                     {% endif %}
