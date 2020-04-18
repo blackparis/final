@@ -1,0 +1,95 @@
+{% extends "customers/layout.html" %}
+
+{% block title %}
+    Homepage
+{% endblock %}
+
+{% block script %}
+    <script src="{{ url_for('static', filename='customers/orders.js') }}"></script>
+{% endblock %}
+
+{% block style %}
+    <style>
+        #allorders {text-align: center; padding: 10px;}
+        #cart_table {width: 100%;}
+    </style>
+{% endblock %}
+
+
+{% block body %}
+<div style="text-align: center;" id="sortstatus">
+    <a id="allorderslink" href="">All</a>&nbsp;&nbsp;
+    {% for s in status %}
+        <a class="statuslinks" href="" data-status="{{ s }}">{{s}}</a>&nbsp;&nbsp;
+    {% endfor %}
+</div>
+<hr>
+<div>
+    {% for order in orders %}
+    <div class="allorders" data-orderstatus="{{order['order'].status}}" id="{{order['order'].id}}">
+        <div class="row" id="allorders">
+            <div class="col-lg-3">
+                <span style="color: green;"><b>Delivery Address</b></span><br>
+                {{ order['address'].name }}<br>
+                {{ order['address'].address }}<br>
+                {{ order['address'].city }}, {{ order['address'].state }}<br>
+                {{ order['address'].pincode }}, {{ order['address'].country }}<br>
+                Contact Number: {{ order['address'].mobile }}
+            </div>
+            <div class="col-lg-6">
+                <span style="color: green;"><b>Details</b></span><br>
+                <table id="cart_table" class="table">
+                    <tr>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Amount</th>
+                    </tr>
+                    {% for item in order['transactions'] %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>Rs {{ item.price }} / {{ item.unit }}</td>
+                        <td>{{ item.qty }}</td>
+                        <td>{{ item.amount }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                <div>
+                    {% if order['order'].status == "OPEN" %}
+                        <button type="submit" class="btn btn-danger" data-orderid="{{ order['order'].id }}">Cancel Order</button><br>
+                        <span style="color: red;" id="notif_{{ order['order'].id }}"></span>
+                    {% elif order['order'].status == "FOR CANCELLATION" %}
+                        <button type="submit" class="btn btn-danger"disabled>Cancel Order</button>
+                    {% endif %}
+                </div>
+            </div>    
+            <div class="col-lg-3">
+                <span style="color: green;"><b>Order Info</b></span><br>
+                <div>Username: <span style="color: brown;">{{ order['order'].username }}</span></div>
+                <div>Amount: {{ order['order'].amount }}</div>
+                <div>Time of Order: {{ order['order'].order_time }}</div>
+                <div>
+                    {% if order['order'].delivery_time %}                
+                        Time of Delivery: {{ order['order'].delivery_time }}
+                    {% endif %}
+                </div>
+                <div>
+                    {% if order['order'].cancellation_time %}
+                        Time of Cancellation: {{ order['order'].cancellation_time }}
+                    {% endif %}
+                </div>
+                <div>
+                    {% if order['order'].prefered_time %}
+                        Prefered Time of Delivery: {{ order['order'].prefered_time }}
+                    {% endif %}
+                </div>
+                
+                <div>Order Status: <span id="status_{{ order['order'].id }}">{{ order['order'].status }}</span></div>
+                <div>Order ID: {{ order['order'].code }}</div>
+            </div>
+        </div>
+        <hr>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

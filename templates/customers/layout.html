@@ -22,9 +22,8 @@
                     <div class="col-lg-8">
                         <h1 id="shopname">{{ shopname }}</h1>
                         {% if customer %}
-                            <a href="{{ url_for('homepage')}}">Homepage</a>&nbsp;&nbsp;
-                            <a href="#">Products</a>&nbsp;&nbsp;                            
-                            <a href="#">Orders</a>&nbsp;&nbsp;
+                            <a href="{{ url_for('homepage')}}">Homepage</a>&nbsp;&nbsp;     
+                            <a href="{{ url_for('orders') }}">Orders</a>&nbsp;&nbsp;
                             <a href="#">Notifications</a><br>
                             <a href="#">Account</a>&nbsp;&nbsp;
                             <a href="{{ url_for('logout')}}">Logout</a><br>

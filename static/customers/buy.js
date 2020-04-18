@@ -25,8 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.success) {
                 document.querySelector("#confirmationmessage").innerHTML = "";
                 let message = `Your Order is Confirmed.\nTransaction ID: ${res.message}`;
-                alert(message);                
-                location.reload();
+                alert(message);
+                window.location.href = "/orders";
+                //location.reload();
             } else {
                 alert(res.message);
             }

@@ -585,6 +585,9 @@ def homepage():
     if session.get("context") == None:
         #context = fetch_products()
         session["context"] = fetch_products()
+
+    if session.get("orders") == None:
+        session["orders"] = get_orders(session["customer"])
     
     #return render_template("customers/homepage.html", shopname=envs.SHOPNAME, customer=session["customer"], products=context["products"], categories=context["categories"], cart=session["cart"], amount=session["totalprice"])
     return render_template("customers/homepage.html", shopname=envs.SHOPNAME, customer=session["customer"], products=session["context"]["products"], categories=session["context"]["categories"], cart=session["cart"], amount=session["totalprice"])
@@ -871,7 +874,7 @@ def placeorder():
         t.code = code
     
     db.session.commit()
-    
+
     session["cart"].clear()
     session["cart"] = None
     session["totalprice"] = 0
@@ -912,11 +915,58 @@ def address():
     return redirect("/buy")
 
 
+def get_orders(username):
+    allorders = []
+    status = []
+    orders = Order.query.filter_by(username=username).order_by(Order.order_time.desc()).all()
+    for order in orders:
+        products = []
+        transactions = order.transactions
+        for t in transactions:
+            p = Product.query.get(t.product_id)
+            tr = {"name": p.name, "price": p.price, "unit": p.unit, "qty": t.qty, "amount": t.amount}
+            products.append(tr)
+        address = Address.query.get(order.addressID)
+        o = {"order": order, "transactions": products, "address": address}
+        if order.status not in status:
+            status.append(order.status)
+        allorders.append(o)
+
+    return {"orders": allorders, "status": status}
 
 
-
+@app.route("/orders")
+def orders():
+    if session.get("customer") == None:
+        return redirect(url_for('login'))
     
+    orders = get_orders(session["customer"])
+    return render_template("customers/orders.html", shopname=envs.SHOPNAME, customer=session["customer"], orders=orders["orders"], status=orders["status"])
 
+
+@app.route("/cancel/order/<int:orderid>")
+def cancel(orderid):
+    if session.get("customer") == None:
+        return jsonify({"success": False, "message": "Invalid Request"})   
+
+    try:
+        orderid = int(orderid)
+    except:
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    o = Order.query.get(orderid)
+    if o == None:
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    if o.status != "OPEN":
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    if o.username != session["customer"]:
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    o.status = "FOR CANCELLATION"
+    db.session.commit()
+    return jsonify({"success": True})
 
 
 @app.route("/login", methods=["POST", "GET"])
