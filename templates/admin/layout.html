@@ -25,7 +25,8 @@
                             <a href="{{ url_for('admin_products') }}">Products</a>&nbsp;&nbsp;
                             <a href="#">Customers</a>&nbsp;&nbsp;
                             <a href="{{ url_for('admin_orders') }}">Orders</a>&nbsp;&nbsp;
-                            <a href="#">Messages</a>&nbsp;&nbsp;
+                            <a href="#">Messages</a><br>
+                            <a href="{{ url_for('refresh_products') }}">Refresh</a>
                         {% endif %}
                     </div>
                     <div class="col-lg-2">

@@ -73,7 +73,6 @@ def get_products():
 def admin():
     if not session.get("admin"):
         return redirect(url_for('admin_login'))
-    get_products()
     return render_template("admin/homepage.html", shopname=envs.SHOPNAME, admin=session["admin"])
 
 
@@ -81,7 +80,6 @@ def admin():
 def admin_products():
     if not session.get("admin"):
         return redirect(url_for('admin_login'))
-
     get_products()
     return render_template("admin/products.html", shopname=envs.SHOPNAME, admin=session["admin"], products=session["products"], categories=session["categories"])
 
@@ -90,7 +88,6 @@ def admin_products():
 def admin_products_details():
     if not session.get("admin"):
         return redirect(url_for('admin_login'))
-
     get_products()
     return render_template("admin/detailedproducts.html", shopname=envs.SHOPNAME, admin=session["admin"], products=session["products"], categories=session["categories"])
 
@@ -99,7 +96,7 @@ def admin_products_details():
 def admin_edit_tags(name):
     if not session.get("admin"):
         return redirect(url_for('admin_login'))
-    
+    get_products()
     p = Product.query.filter_by(name=name).first()
     if p == None:
         return redirect(url_for('admin_products_details'))
@@ -154,8 +151,7 @@ def admin_edit_tags(name):
     else:
         tag.tag5 = None
 
-    db.session.commit()
-    get_products()
+    db.session.commit()    
     session["products"][p.name]["tags"].clear()
     session["products"][p.name]["tags"] = t
     return redirect(url_for('admin_products_details'))
@@ -165,7 +161,7 @@ def admin_edit_tags(name):
 def admin_add_tags(name):
     if not session.get("admin"):
         return redirect(url_for('admin_login'))
-    
+    get_products()
     p = Product.query.filter_by(name=name).first()
     if p == None:
         return redirect(url_for('admin_products_details'))
@@ -213,7 +209,6 @@ def admin_add_tags(name):
     tags = Tags(product_id=p.id, tag1=tag1, tag2=tag2, tag3=tag3, tag4=tag4, tag5=tag5)
     db.session.add(tags)
     db.session.commit()
-    get_products()
     session["products"][p.name]["tags"] = t
     return redirect(url_for('admin_products_details'))
 
@@ -221,8 +216,7 @@ def admin_add_tags(name):
 @app.route("/admin/products/add", methods=["POST", "GET"])
 def admin_add_product():
     if not session.get("admin"):
-        return redirect(url_for('admin_login'))
-    
+        return redirect(url_for('admin_login'))    
     get_products()
     if session.get("newproduct") == None:
         session["newproduct"] = {}
@@ -463,6 +457,23 @@ def getProductInfo(name):
     return jsonify({"success": True, "data": session["products"][name]})
 
 
+def refresh():
+    if session.get("products") != None:
+        session["products"].clear()
+        session["products"] = None
+        session["categories"].clear()
+    get_products()
+    return
+    
+
+@app.route("/refresh")
+def refresh_products():
+    if not session.get("admin"):
+        return redirect(url_for('admin_login'))
+    refresh()
+    return redirect(url_for('admin'))
+
+
 @app.route("/admin/search", methods=["POST"])
 def admin_search():
     if not session.get("admin"):
@@ -472,7 +483,7 @@ def admin_search():
         return render_template("admin/search.html", shopname=envs.SHOPNAME, admin=session["admin"], message="Type Something")
     
     keyword = keyword.strip().lower()
-
+    refresh()
     results = []
     for key, value in session["products"].items():
         if keyword in key.lower() or keyword in value["tags"]:
@@ -550,7 +561,7 @@ def admin_cancel_order(orderid):
     for tr in trs:
         p = Product.query.get(tr.product_id)
         p.stock += tr.qty
-        session["products"][p.name]["qty"] = p.stock
+        session["products"][p.name]["stock"] = p.stock
 
     db.session.commit()
 
@@ -581,9 +592,6 @@ def admin_close_order(orderid):
     db.session.commit()
 
     return jsonify({"success": True, "delivery_time": delivery_time, "status": "CLOSED"})
-
-    
-
 
 
 @app.route("/admin/login", methods=["POST", "GET"])
@@ -677,15 +685,8 @@ def homepage():
     if session.get("cart") == None:
         load_cart(session["customer"])
     
-    if session.get("context") == None:
-        #context = fetch_products()
-        session["context"] = fetch_products()
-
-    if session.get("orders") == None:
-        session["orders"] = get_orders(session["customer"])
-    
-    #return render_template("customers/homepage.html", shopname=envs.SHOPNAME, customer=session["customer"], products=context["products"], categories=context["categories"], cart=session["cart"], amount=session["totalprice"])
-    return render_template("customers/homepage.html", shopname=envs.SHOPNAME, customer=session["customer"], products=session["context"]["products"], categories=session["context"]["categories"], cart=session["cart"], amount=session["totalprice"])
+    context = fetch_products()
+    return render_template("customers/homepage.html", shopname=envs.SHOPNAME, customer=session["customer"], products=context["products"], categories=context["categories"], cart=session["cart"], amount=session["totalprice"])
 
 
 @app.route("/ifcart")
@@ -722,8 +723,7 @@ def addToCart(pid):
         return redirect(url_for('homepage'))
 
     if session.get("cart") == None:
-        session["cart"] = {}
-        session["totalprice"] = 0
+        load_cart(session["customer"])
 
     if p.name in session["cart"]:
         QTY = session["cart"][p.name]["qty"] + qty
@@ -769,8 +769,7 @@ def add2cart(pid, qty):
         return jsonify({"success": False, "message": f"Only {p.stock} {p.unit}(s) of {p.name}(s) is/are available."})
 
     if session.get("cart") == None:
-        session["cart"] = {}
-        session["totalprice"] = 0
+        load_cart(session["customer"])
 
     if p.name in session["cart"]:
         QTY = session["cart"][p.name]["qty"] + qty
