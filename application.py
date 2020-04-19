@@ -471,7 +471,7 @@ def refresh_products():
     if not session.get("admin"):
         return redirect(url_for('admin_login'))
     refresh()
-    return redirect(url_for('admin'))
+    return redirect(url_for('admin_products'))
 
 
 @app.route("/admin/search", methods=["POST"])
@@ -973,6 +973,7 @@ def placeorder():
     session["cart"] = None
     session["totalprice"] = 0
 
+    socketio.emit("new order", {"code": code}, broadcast=False)
     return jsonify({"success": True, "message": code})
 
 
@@ -1061,6 +1062,21 @@ def cancel(orderid):
     o.prefered_time = None
     db.session.commit()
     return jsonify({"success": True, "message": "FOR CANCELLATION"})
+
+
+@app.route("/productInfo/<name>")
+def productInfo(name):
+    if session.get("customer") == None:
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    p = Product.query.filter_by(name=name).first()
+    if p == None:
+        return jsonify({"success": False, "message": "Product Does Not Exist"})
+    
+    return jsonify({"success": True, "message": p.info})
+
+
+
 
 
 @app.route("/login", methods=["POST", "GET"])
@@ -1199,5 +1215,51 @@ def verification():
     return redirect("/login")
 
 
-if __name__ == '__main__':
-    socketio.run(app)
+#socket codes for admin new order update
+@app.route("/admin/orderdetails/<int:code>")
+def orderdetails(code):
+    if not session.get("admin"):
+        return jsonify({"success": False, "message": "Invalid Request"})
+
+    try:
+        code = int(code)
+    except:
+        return jsonify({"success": False, "message": "Invalid Request"})
+    
+    order = Order.query.filter_by(code=code).first()
+
+    transactions = order.transactions
+    tr = []
+    for t in transactions:
+        p = Product.query.get(t.product_id)
+        item = {"name": p.name, "price": p.price, "unit": p.unit, "qty": t.qty, "amount": t.amount}
+        tr.append(item)
+
+    address = Address.query.get(order.addressID)
+    response = {        
+        "name": address.name,
+        "address": address.address,
+        "city": address.city,
+        "state": address.state,
+        "pincode": address.pincode,
+        "country": address.country,
+        "mobile": address.mobile,
+        "status": order.status,
+        "id": order.id,
+        "transactions": tr,
+        "username": order.username,
+        "amount": order.amount,
+        "order_time": order.order_time,
+        "delivery_time": order.delivery_time,
+        "cancellation_time": order.cancellation_time,
+        "prefered_time": order.prefered_time,
+        "code": code
+    }
+    return jsonify({"success": True, "response": response})
+
+
+
+
+
+#if __name__ == '__main__':
+ #   socketio.run(app)

@@ -106,7 +106,7 @@
     <div class="flex-container">
         {% for name, details in products.items() %}
         <div class="category" data-category="{{details['category']}}">
-            <span style="color: green;">{{ name }}</span><br>
+            <span style="color: green;"><a href="" class="productname" data-productname="{{ name }}">{{ name }}</a></span><br>
             <div>
                 <span>Rs {{ details['price'] }} / {{ details['unit'] }}</span>
             </div>

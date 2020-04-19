@@ -1,6 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
     checkcart()
 
+    document.querySelectorAll(".productname").forEach(a => {
+        a.onclick = ()=> {
+            let name = a.dataset.productname;
+            const request = new XMLHttpRequest();
+            request.open('GET', `/productInfo/${name}`);
+            request.onload = () => {
+                let res = JSON.parse(request.responseText);
+                if (res.success) {
+                    alert(res.message);
+                } else {
+                    alert(res.message);
+                }
+            };
+            request.send();
+            return false;
+
+        };
+    });
+
     document.querySelectorAll(".categories").forEach(link => {
         link.onclick = ()=> {
             let selectedCategory = link.dataset.category;
