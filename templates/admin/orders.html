@@ -37,8 +37,13 @@
                         {{/each}}
                     </table>
                     <div id="trlinks_{{id}}">
-                        <button type="submit" onclick="closeorder('{{id}}')" id="closeOrderButton_{{id}}" class="btn btn-success" data-orderid="{{id}}">Close</button><br>
-                        <span style="color: red;" id="closenotif_{{id}}"></span>
+                        {{#if neworder}}
+                            <button type="submit" onclick="closeorder('{{id}}')" id="closeOrderButton_{{id}}" class="btn btn-success" data-orderid="{{id}}">Close</button><br>
+                            <span style="color: red;" id="closenotif_{{id}}"></span>
+                        {{else}}
+                            <button type="submit" onclick="cancelorder('{{id}}')" id="cancelOrderButton_{{id}}" class="btn btn-danger" data-orderid="{{id}}">Cancel Order</button><br>
+                            <span style="color: red;" id="cancelnotif_{{id}}"></span>
+                        {{/if}}
                     </div>
                 </div>    
                 <div class="col-lg-4">
@@ -124,7 +129,7 @@
                         <button type="submit" id="closeOrderButton_{{ order['order'].id }}" class="btn btn-success" data-orderid="{{ order['order'].id }}">Close</button><br>
                         <span style="color: red;" id="closenotif_{{ order['order'].id }}"></span>
                     {% elif order['order'].status == "FOR CANCELLATION" %}
-                        <button type="submit" class="btn btn-danger" data-orderid="{{ order['order'].id }}">Cancel Order</button><br>
+                        <button type="submit" id="cancelOrderButton_{{ order['order'].id }}" class="btn btn-danger" data-orderid="{{ order['order'].id }}">Cancel Order</button><br>
                         <span style="color: red;" id="cancelnotif_{{ order['order'].id }}"></span>
                     {% endif %}
                 </div>

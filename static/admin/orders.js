@@ -6,6 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
         newOrderNotification(data.code);        
     });
 
+    socket.on('order cancellation', data => {
+        orderCancellationNotification(data.code);
+    });    
+
     document.querySelectorAll(".statuslinks").forEach(a => {
         a.onclick = ()=> {
             let status = a.dataset.status;
@@ -160,4 +164,69 @@ function closeorder(orderid) {
         }                    
     };
     request.send();
+}
+
+function orderCancellationNotification(code) {
+    const request = new XMLHttpRequest();
+    request.open('GET', `/admin/orderdetails/${code}`);
+    request.onload = () => {
+        let res = JSON.parse(request.responseText);
+        if (res.success) {
+            let oid = res.response.id;
+            document.getElementById(oid).remove();
+            var ordertemplate = Handlebars.compile(document.querySelector('#newOrderTemplate').innerHTML);
+            var template = ordertemplate(res.response);
+            var orders = document.querySelector("#ordertemplate").innerHTML;
+            template += orders;
+            document.querySelector("#ordertemplate").innerHTML = template;
+            let count = document.querySelector("#countOfOpenOrders").innerHTML;
+            count--;
+            document.querySelector("#countOfOpenOrders").innerHTML = count;
+            let cnt = document.querySelector("#countOfCancelletionRequests").innerHTML;
+            cnt++;
+            document.querySelector("#countOfCancelletionRequests").innerHTML = cnt;
+        }                    
+        else {
+            alert(res.message);
+        }                    
+    };
+    request.send();
+}
+
+function cancelorder(orderid) {
+    var r = confirm("Are You Sure?");
+    if (r === true) {
+        var cancelOrderButtonid = `cancelOrderButton_${orderid}`;
+        let b = document.getElementById(cancelOrderButtonid);
+        b.disabled = true;
+        let notifid = `cancelnotif_${orderid}`;
+        document.getElementById(notifid).innerHTML = "Please Wait";
+        
+        const request = new XMLHttpRequest();
+        request.open('GET', `/admin/cancelorder/${orderid}`);
+        request.onload = () => {
+            let res = JSON.parse(request.responseText);
+            if (res.success) {
+                let statusid = `status_${orderid}`;
+                document.getElementById(statusid).innerHTML = res.status;
+                let cid = `cancellation_${orderid}`;
+                document.getElementById(cid).innerHTML = `Time of Cancellation: ${res.cancellation_time}`;
+                document.getElementById(orderid).dataset.orderstatus = res.status;
+                let trlinks = `trlinks_${orderid}`;
+                document.getElementById(trlinks).remove();
+                let count = document.querySelector("#countOfCancelletionRequests").innerHTML;
+                count--;
+                document.querySelector("#countOfCancelletionRequests").innerHTML = count;
+                let prefered = `prefered_${orderid}`;
+                document.getElementById(prefered).remove();
+                alert("This Order is Cancelled");
+            }                    
+            else {
+                alert(res.message);
+                location.reload();
+            }                    
+        };
+        request.send();
+        return false;
+    }
 }

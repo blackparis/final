@@ -1061,6 +1061,7 @@ def cancel(orderid):
     o.status = "FOR CANCELLATION"
     o.prefered_time = None
     db.session.commit()
+    socketio.emit("order cancellation", {"code": o.code}, broadcast=False)
     return jsonify({"success": True, "message": "FOR CANCELLATION"})
 
 
@@ -1215,7 +1216,7 @@ def verification():
     return redirect("/login")
 
 
-#socket codes for admin new order update
+# admin page - code for new-order/order-cancellation notification (websocket)
 @app.route("/admin/orderdetails/<int:code>")
 def orderdetails(code):
     if not session.get("admin"):
@@ -1227,6 +1228,9 @@ def orderdetails(code):
         return jsonify({"success": False, "message": "Invalid Request"})
     
     order = Order.query.filter_by(code=code).first()
+    if order == None:
+        return jsonify({"success": False, "message": "Invalid Request"})
+
 
     transactions = order.transactions
     tr = []
@@ -1234,6 +1238,11 @@ def orderdetails(code):
         p = Product.query.get(t.product_id)
         item = {"name": p.name, "price": p.price, "unit": p.unit, "qty": t.qty, "amount": t.amount}
         tr.append(item)
+
+    if order.status == "OPEN":
+        neworder = True
+    else:
+        neworder = False
 
     address = Address.query.get(order.addressID)
     response = {        
@@ -1253,13 +1262,11 @@ def orderdetails(code):
         "delivery_time": order.delivery_time,
         "cancellation_time": order.cancellation_time,
         "prefered_time": order.prefered_time,
-        "code": code
+        "code": code,
+        "neworder": neworder
     }
     return jsonify({"success": True, "response": response})
 
 
-
-
-
-#if __name__ == '__main__':
- #   socketio.run(app)
+if __name__ == '__main__':
+    socketio.run(app)
