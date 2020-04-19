@@ -1,5 +1,31 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+
+    socket.on('order closed', data => {
+        const request = new XMLHttpRequest();
+        request.open('GET', `/getusername`);
+        request.onload = () => {
+            let res = JSON.parse(request.responseText);
+            if (res.success && (data.username === res.username)) {
+                updateCloseOrderNotification(data.orderid, data.username);
+            }
+        };
+        request.send();
+    });
+
+    socket.on('order cancelled', data => {
+        const request = new XMLHttpRequest();
+        request.open('GET', `/getusername`);
+        request.onload = () => {
+            let res = JSON.parse(request.responseText);
+            if (res.success && (data.username === res.username)) {
+                updateCancelledOrderNotification(data.orderid, data.username);
+            }
+        };
+        request.send();
+    });    
+
     document.querySelectorAll(".statuslinks").forEach(a => {
         a.onclick = ()=> {
             let status = a.dataset.status;
@@ -57,4 +83,44 @@ function sortorders(status) {
             d.style.display = "none";
     });
     return false;
+}
+
+function updateCloseOrderNotification(orderid, username) {
+    const request = new XMLHttpRequest();
+    request.open('GET', `/orderdetails/${username}/${orderid}`);
+    request.onload = () => {
+        let res = JSON.parse(request.responseText);
+        if (res.success) {
+            document.getElementById(orderid).remove();
+            var ordertemplate = Handlebars.compile(document.querySelector('#OrderTemplate').innerHTML);
+            var template = ordertemplate(res.response);
+            var orders = document.querySelector("#ordertemplate").innerHTML;
+            template += orders;
+            document.querySelector("#ordertemplate").innerHTML = template;
+            let count = document.querySelector("#countOfClosedOrders").innerHTML;
+            count++;
+            document.querySelector("#countOfClosedOrders").innerHTML = count;
+        }                    
+    };
+    request.send();
+}
+
+function updateCancelledOrderNotification(orderid, username) {
+    const request = new XMLHttpRequest();
+    request.open('GET', `/orderdetails/${username}/${orderid}`);
+    request.onload = () => {
+        let res = JSON.parse(request.responseText);
+        if (res.success) {
+            document.getElementById(orderid).remove();
+            var ordertemplate = Handlebars.compile(document.querySelector('#OrderTemplate').innerHTML);
+            var template = ordertemplate(res.response);
+            var orders = document.querySelector("#ordertemplate").innerHTML;
+            template += orders;
+            document.querySelector("#ordertemplate").innerHTML = template;
+            let count = document.querySelector("#countOfCancelledOrders").innerHTML;
+            count++;
+            document.querySelector("#countOfCancelledOrders").innerHTML = count;
+        }                    
+    };
+    request.send();
 }

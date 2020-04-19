@@ -564,7 +564,7 @@ def admin_cancel_order(orderid):
         session["products"][p.name]["stock"] = p.stock
 
     db.session.commit()
-
+    socketio.emit("order cancelled", {"orderid": order.id, "username": order.username}, broadcast=False)
     return jsonify({"success": True, "cancellation_time": cancellation_time, "status": "CANCELLED"})
 
 
@@ -590,7 +590,7 @@ def admin_close_order(orderid):
     order.delivery_time = delivery_time
 
     db.session.commit()
-
+    socketio.emit("order closed", {"orderid": order.id, "username": order.username}, broadcast=False)
     return jsonify({"success": True, "delivery_time": delivery_time, "status": "CLOSED"})
 
 
@@ -1077,7 +1077,12 @@ def productInfo(name):
     return jsonify({"success": True, "message": p.info})
 
 
-
+@app.route("/getusername")
+def getusername():
+    if session.get("customer") == None:
+        return jsonify({"success": False})
+    else:
+        return jsonify({"success": True, "username": session["customer"]})
 
 
 @app.route("/login", methods=["POST", "GET"])
@@ -1267,6 +1272,57 @@ def orderdetails(code):
     }
     return jsonify({"success": True, "response": response})
 
+
+# customer page - code for closed-order/cancelled-order notification (websocket)
+@app.route("/orderdetails/<username>/<int:orderid>")
+def order_details(username, orderid):
+    if session.get("customer") == None:
+        return jsonify({"success": False})
+    elif session["customer"] != username:
+        return jsonify({"success": False})
+    
+    try:
+        oid = int(orderid)
+    except:
+        return jsonify({"success": False})
+
+    order = Order.query.get(oid)
+    if order == None:
+        return jsonify({"success": False})
+
+    if order.status != "CLOSED" and order.status != "CANCELLED":
+        return jsonify({"success": False})
+
+    transactions = order.transactions
+    tr = []
+    for t in transactions:
+        p = Product.query.get(t.product_id)
+        item = {"name": p.name, "price": p.price, "unit": p.unit, "qty": t.qty, "amount": t.amount}
+        tr.append(item)
+
+    address = Address.query.get(order.addressID)
+    response = {        
+        "name": address.name,
+        "address": address.address,
+        "city": address.city,
+        "state": address.state,
+        "pincode": address.pincode,
+        "country": address.country,
+        "mobile": address.mobile,
+        "status": order.status,
+        "id": order.id,
+        "transactions": tr,
+        "username": order.username,
+        "amount": order.amount,
+        "order_time": order.order_time,
+        "delivery_time": order.delivery_time,
+        "cancellation_time": order.cancellation_time,
+        "prefered_time": order.prefered_time,
+        "code": order.code
+    }
+
+    return jsonify({"success": True, "response": response})    
+    
 
 if __name__ == '__main__':
     socketio.run(app)

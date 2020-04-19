@@ -6,6 +6,68 @@
 
 {% block script %}
     <script src="{{ url_for('static', filename='customers/orders.js') }}"></script>
+    <script id="OrderTemplate" type="text/x-handlebars-template">
+        {% raw -%}
+        <div class="allorders" data-orderstatus="{{status}}" id="{{id}}">
+            <div class="row" id="allorders">
+                <div class="col-lg-3">
+                    <span style="color: green;"><b>Delivery Address</b></span><br>
+                    {{name}}<br>
+                    {{address}}<br>
+                    {{city}}, {{state}}<br>
+                    {{pincode}}, {{country}}<br>
+                    Contact Number: {{mobile}}
+                </div>
+                <div class="col-lg-5">
+                    <span style="color: green;"><b>Details</b></span><br>
+                    <table id="cart_table" class="table">
+                        <tr>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Amount</th>
+                        </tr>
+                        {{#each transactions}}
+                        <tr>
+                            <td>{{ this.name }}</td>
+                            <td>Rs {{ this.price }} / {{ this.unit }}</td>
+                            <td>{{ this.qty }}</td>
+                            <td>{{ this.amount }}</td>
+                        </tr>
+                        {{/each}}
+                    </table>
+                    <div>
+                    </div>
+                </div>    
+                <div class="col-lg-4">
+                    <span style="color: green;"><b>Order Info</b></span><br>
+                    <div>Username: <span style="color: brown;">{{username}}</span></div>
+                    <div>Amount: {{amount}}</div>
+                    <div>Time of Order: {{order_time}}</div>
+                    <div>
+                        {{#if delivery_time}}
+                            Dispatch Time: {{delivery_time}}
+                        {{/if}}
+                    </div>
+                    <div>
+                        {{#if cancellation_time}}
+                            Time of Cancellation: {{cancellation_time}}
+                        {{/if}}
+                    </div>
+                    <div id="preferedTime_{{id}}">
+                        {{#if prefered_time}}
+                            Prefered Time of Delivery: {{prefered_time}}
+                        {{/if}}
+                    </div>
+                    
+                    <div>Order Status: <span id="status_{{id}}">{{status}}</span></div>
+                    <div>Order ID: {{code}}</div>
+                </div>
+            </div>
+            <hr>
+        </div>        
+        {%- endraw %}
+    </script>
 {% endblock %}
 
 {% block style %}
@@ -20,12 +82,12 @@
 <div style="text-align: center;" id="sortstatus">
     <a id="allorderslink" href="">All</a>&nbsp;&nbsp;
     <a class="statuslinks" href="" data-status="OPEN">OPEN</a>&nbsp;&nbsp;
-    <a class="statuslinks" href="" data-status="CANCELLED">CANCELLED</a>(<span>{{ countCN }}</span>)&nbsp;&nbsp;
+    <a class="statuslinks" href="" data-status="CANCELLED">CANCELLED</a>(<span id="countOfCancelledOrders">{{ countCN }}</span>)&nbsp;&nbsp;
     <a class="statuslinks" href="" data-status="FOR CANCELLATION">FOR CANCELLATION</a>&nbsp;&nbsp;
-    <a class="statuslinks" href="" data-status="CLOSED">CLOSED</a>(<span>{{ countCL }}</span>)
+    <a class="statuslinks" href="" data-status="CLOSED">CLOSED</a>(<span id="countOfClosedOrders">{{ countCL }}</span>)
 </div>
 <hr>
-<div>
+<div id="ordertemplate">
     {% for order in orders %}
     <div class="allorders" data-orderstatus="{{order['order'].status}}" id="{{order['order'].id}}">
         <div class="row" id="allorders">
