@@ -94,9 +94,9 @@ function updateCloseOrderNotification(orderid, username) {
             document.getElementById(orderid).remove();
             var ordertemplate = Handlebars.compile(document.querySelector('#OrderTemplate').innerHTML);
             var template = ordertemplate(res.response);
-            var orders = document.querySelector("#ordertemplate").innerHTML;
+            var orders = document.querySelector("#orderTemplateDiv").innerHTML;
             template += orders;
-            document.querySelector("#ordertemplate").innerHTML = template;
+            document.querySelector("#orderTemplateDiv").innerHTML = template;
             let count = document.querySelector("#countOfClosedOrders").innerHTML;
             count++;
             document.querySelector("#countOfClosedOrders").innerHTML = count;
@@ -114,9 +114,9 @@ function updateCancelledOrderNotification(orderid, username) {
             document.getElementById(orderid).remove();
             var ordertemplate = Handlebars.compile(document.querySelector('#OrderTemplate').innerHTML);
             var template = ordertemplate(res.response);
-            var orders = document.querySelector("#ordertemplate").innerHTML;
+            var orders = document.querySelector("#orderTemplateDiv").innerHTML;
             template += orders;
-            document.querySelector("#ordertemplate").innerHTML = template;
+            document.querySelector("#orderTemplateDiv").innerHTML = template;
             let count = document.querySelector("#countOfCancelledOrders").innerHTML;
             count++;
             document.querySelector("#countOfCancelledOrders").innerHTML = count;

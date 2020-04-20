@@ -82,12 +82,12 @@
 <div style="text-align: center;" id="sortstatus">
     <a id="allorderslink" href="">All</a>&nbsp;&nbsp;
     <a class="statuslinks" href="" data-status="OPEN">OPEN</a>&nbsp;&nbsp;
-    <a class="statuslinks" href="" data-status="CANCELLED">CANCELLED</a>(<span id="countOfCancelledOrders">{{ countCN }}</span>)&nbsp;&nbsp;
     <a class="statuslinks" href="" data-status="FOR CANCELLATION">FOR CANCELLATION</a>&nbsp;&nbsp;
+    <a class="statuslinks" href="" data-status="CANCELLED">CANCELLED</a>(<span id="countOfCancelledOrders">{{ countCN }}</span>)&nbsp;&nbsp;
     <a class="statuslinks" href="" data-status="CLOSED">CLOSED</a>(<span id="countOfClosedOrders">{{ countCL }}</span>)
 </div>
 <hr>
-<div id="ordertemplate">
+<div id="orderTemplateDiv">
     {% for order in orders %}
     <div class="allorders" data-orderstatus="{{order['order'].status}}" id="{{order['order'].id}}">
         <div class="row" id="allorders">

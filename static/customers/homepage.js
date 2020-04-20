@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    document.querySelector("#cartdivision").style.display = "none";
     checkcart()
 
     document.querySelectorAll(".productname").forEach(a => {
