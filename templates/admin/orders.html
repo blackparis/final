@@ -94,7 +94,7 @@
     <a class="statuslinks" href="" data-status="CLOSED">CLOSED</a>
 </div>
 <hr>
-<div id="ordertemplate">
+<div id="orderTemplateDiv">
     {% for order in orders %}
     <div class="allorders" data-orderstatus="{{order['order'].status}}" id="{{order['order'].id}}">
         <div class="row" id="allorders">

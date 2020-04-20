@@ -1324,5 +1324,5 @@ def order_details(username, orderid):
     return jsonify({"success": True, "response": response})    
     
 
-if __name__ == '__main__':
-    socketio.run(app)
+#if __name__ == '__main__':
+#    socketio.run(app)

@@ -118,9 +118,9 @@ function newOrderNotification(code) {
         if (res.success) {
             var ordertemplate = Handlebars.compile(document.querySelector('#newOrderTemplate').innerHTML);
             var template = ordertemplate(res.response);
-            var orders = document.querySelector("#ordertemplate").innerHTML;
+            var orders = document.querySelector("#orderTemplateDiv").innerHTML;
             template += orders;
-            document.querySelector("#ordertemplate").innerHTML = template;
+            document.querySelector("#orderTemplateDiv").innerHTML = template;
             let count = document.querySelector("#countOfOpenOrders").innerHTML;
             count++;
             document.querySelector("#countOfOpenOrders").innerHTML = count;
@@ -176,9 +176,9 @@ function orderCancellationNotification(code) {
             document.getElementById(oid).remove();
             var ordertemplate = Handlebars.compile(document.querySelector('#newOrderTemplate').innerHTML);
             var template = ordertemplate(res.response);
-            var orders = document.querySelector("#ordertemplate").innerHTML;
+            var orders = document.querySelector("#orderTemplateDiv").innerHTML;
             template += orders;
-            document.querySelector("#ordertemplate").innerHTML = template;
+            document.querySelector("#orderTemplateDiv").innerHTML = template;
             let count = document.querySelector("#countOfOpenOrders").innerHTML;
             count--;
             document.querySelector("#countOfOpenOrders").innerHTML = count;
