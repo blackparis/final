@@ -122,7 +122,7 @@
                         <button type="submit" class="btn btn-danger" data-orderid="{{ order['order'].id }}">Cancel Order</button><br>
                         <span style="color: red;" id="notif_{{ order['order'].id }}"></span>
                     {% elif order['order'].status == "FOR CANCELLATION" %}
-                        <button type="submit" class="btn btn-danger"disabled>Cancel Order</button>
+                        <button type="submit" class="btn btn-danger" disabled>Cancel Order</button>
                     {% endif %}
                 </div>
             </div>    

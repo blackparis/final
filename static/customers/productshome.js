@@ -18,7 +18,7 @@ function load() {
     // Set start and end post numbers, and update counter.
     const start = counter;
     const end = start + quantity;
-    counter = end + 1;
+    counter = end;
 
     // Open new request to get new posts.
     const request = new XMLHttpRequest();
