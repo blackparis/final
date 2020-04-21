@@ -626,7 +626,7 @@ def admin_logout():
 def fetch_products():
     PRODUCTS = {}
     categories = []
-    products = Product.query.order_by(Product.name).all()
+    products = Product.query.filter_by(display=True).order_by(Product.name).all()
     for p in products:
         PRODUCTS[p.name] = {
             "id": p.id,
@@ -728,6 +728,38 @@ def homepage():
         p = dict(itertools.islice(session["context"]["products"].items(), start, end))
         plist = list(p.values())
         return jsonify({"success": True, "products": plist})
+
+    
+@app.route("/search", methods=["POST"])
+def search():
+    if session.get("customer") == None:
+        return redirect(url_for('login'))
+    
+    name = request.form.get("keyword")
+    if not name:
+        return render_template("customers/search.html", shopname=envs.SHOPNAME, customer=session["customer"], search_error="enter a keyword", keyword=None)
+    
+    if session.get("context") == None:
+        session["context"] = fetch_products()
+    
+    result = []
+    
+    for pname, product in session["context"]["products"].items():
+        if name.lower() in pname.lower() or name.lower() in product["tags"]:
+            result.append(product)
+    if result == []:
+        return render_template("customers/search.html", shopname=envs.SHOPNAME, customer=session["customer"], keyword=name, search_error="Sorry! We couldn't find anything.")
+        
+
+    return render_template("customers/search.html", shopname=envs.SHOPNAME, customer=session["customer"], keyword=name, result=result)
+
+    
+
+
+    
+
+
+
 
 
 @app.route("/ifcart")

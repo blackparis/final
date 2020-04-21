@@ -32,9 +32,9 @@
                     </div>
                     <div class="col-lg-2">
                         {% if customer %}
-                            <form action="#" method="POST" id="searchform">
+                            <form action="{{ url_for('search') }}" method="POST" id="searchform">
                                 <div class="form-group">                                    
-                                    <input type="text" class="form-control input-sm" id="keyword" name="keyword" autocomplete="off">
+                                    <input type="text" class="form-control input-sm" id="keyword" name="keyword" autocomplete="off" placeholder="keyword">
                                 </div>
                                 <button type="submit" class="btn btn-primary btn-sm">Search</button>
                             </form>

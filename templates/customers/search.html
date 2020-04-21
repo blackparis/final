@@ -1,0 +1,53 @@
+{% extends "customers/layout.html" %}
+
+{% block title %}
+    Search Results
+{% endblock %}
+
+{% block script %}
+    <script src="{{ url_for('static', filename='customers/search.js') }}"></script>
+{% endblock %}
+
+{% block style %}
+    <style>
+        .flex-container {display: flex; flex-wrap: wrap; justify-content: center; text-align: center;}
+        .flex-container > div {padding: 5px;}
+        #thumbnail {height: 150px;}
+    </style>
+{% endblock %}
+
+
+{% block body %}
+<div style="text-align: center;">
+    <div>
+        Keyword: {{ keyword }}
+    </div>
+    <div>
+        <a href="{{ url_for('homepage') }}">Homepage</a>
+    </div>
+</div><hr>
+{% if result %}
+<div class="flex-container" id="allproducts">
+    {% for product in result %}
+    <div class="category" data-category="{{product.category}}">
+        <a href="" onclick="return getProductInfo('{{product.name}}');" class="productname" data-productname="{{product.name}}"><span style="color: green;">{{product.name}}</span></a><br>
+        <div>
+            <span>Rs {{product.price}} / {{product.unit}}</span>
+        </div>
+        <a href="{{product.url}}" target="_blank"><img src="{{product.url}}" id="thumbnail" class="img-thumbnail"></a><br>
+        <form class="form-inline addToCartForm" style="padding: 5px;" onsubmit="return addToCart('{{product.id}}');">
+            &nbsp;&nbsp;&nbsp;
+            <input type="text" style="width: 50px;" class="form-control" placeholder="qty" id="{{product.id}}" autocomplete="off">
+            &nbsp;&nbsp;&nbsp;
+            <button class="btn btn-success">Add</button>
+        </form>                
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div style="text-align: center; color: red;">
+    {{search_error}}
+</div>
+    
+{% endif %}
+{% endblock %}
