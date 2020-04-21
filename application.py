@@ -720,6 +720,10 @@ def homepage():
             end = int(end)
         except:
             return jsonify({"success": False})
+        
+        l = len(session["context"]["products"])
+        if end > l:
+            end = l
 
         p = dict(itertools.islice(session["context"]["products"].items(), start, end))
         plist = list(p.values())

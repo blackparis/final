@@ -1,4 +1,4 @@
-let counter = 1;
+let counter = 0;
 
 // Load products 14 at a time.
 const quantity = 14;
@@ -17,7 +17,7 @@ function load() {
 
     // Set start and end post numbers, and update counter.
     const start = counter;
-    const end = start + quantity - 1;
+    const end = start + quantity;
     counter = end + 1;
 
     // Open new request to get new posts.
