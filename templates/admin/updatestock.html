@@ -1,0 +1,40 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}
+    Update Stock
+{% endblock %}
+
+{% block script %}
+    <script src="{{ url_for('static', filename='admin/updatestock.js') }}"></script>
+{% endblock %}
+
+{% block style %}
+    <style>
+        #products {text-align: center; padding: 10px;}
+        .flex-container {display: flex; flex-wrap: wrap; justify-content: center; text-align: center;}
+        .flex-container > div {padding: 5px;}
+    </style>
+{% endblock %}
+
+
+{% block body %}
+    <div id="products">
+        <p>Update Stock</p>
+        <p>Products with stock value of less than 10</p>
+    </div>
+    <div class="flex-container">
+        {% for p in products %}
+        <div id="{{ p.name }}">
+            <div>{{ p.name }}</div>
+            <div>
+                <span>{{ p.stock }}</span>&nbsp;&nbsp;{{ p.unit }}
+            </div>
+            <form class="form-inline" style="padding: 5px;" onsubmit="return updatestock('{{p.id}}');">
+                <input type="text" style="width: 50px;" class="form-control" placeholder="qty" autocomplete="off" id="{{p.id}}">
+                &nbsp;&nbsp;&nbsp;
+                <button class="btn btn-success" id="btn_{{ p.id }}">Update</button>
+            </form>
+        </div>
+        {% endfor %}    
+    </div>
+{% endblock %}

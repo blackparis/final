@@ -22,11 +22,12 @@
                     <div class="col-lg-8">
                         <h1 id="shopname">{{ shopname }}</h1>
                         {% if admin %}
+                            <a href="{{ url_for('admin')}}">Homepage</a>&nbsp;&nbsp;
                             <a href="{{ url_for('admin_products') }}">Products</a>&nbsp;&nbsp;
-                            <a href="#">Customers</a>&nbsp;&nbsp;
                             <a href="{{ url_for('admin_orders') }}">Orders</a>&nbsp;&nbsp;
-                            <a href="#">Messages</a><br>
-                            <a href="{{ url_for('refresh_products') }}">Refresh</a>
+                            <a href="{{ url_for('admin_stock_update') }}">Stock Update</a><br>
+                            <a href="{{ url_for('refresh_products') }}">Refresh</a>&nbsp;&nbsp;                            
+                            <a href="{{ url_for('admin_logout')}}">Logout</a>
                         {% endif %}
                     </div>
                     <div class="col-lg-2">
@@ -36,9 +37,7 @@
                                     <input type="text" class="form-control input-sm" id="keyword" name="keyword" autocomplete="off">
                                 </div>
                                 <button type="submit" class="btn btn-primary btn-sm">Search</button>
-                            </form>
-                            <a href="{{ url_for('admin')}}">Homepage</a>&nbsp;&nbsp;
-                            <a href="{{ url_for('admin_logout')}}">Logout</a>
+                            </form>                            
                         {% endif %}
                     </div>
                 </div>

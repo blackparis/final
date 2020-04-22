@@ -74,7 +74,64 @@ def get_products():
 def admin():
     if not session.get("admin"):
         return redirect(url_for('admin_login'))
-    return render_template("admin/homepage.html", shopname=envs.SHOPNAME, admin=session["admin"])
+    
+    count_open = Order.query.filter_by(status="OPEN").count()
+    count_for_cancellaiton = Order.query.filter_by(status="FOR CANCELLATION").count()
+    products = Product.query.filter(Product.stock < 10).count()
+    return render_template(
+        "admin/homepage.html",
+        shopname=envs.SHOPNAME,
+        admin=session["admin"],
+        count_open=count_open,
+        count_for_cancellaiton=count_for_cancellaiton,
+        products=products
+    )
+
+
+@app.route("/admin/stockupdate", methods=["POST", "GET"])
+def admin_stock_update():
+    if request.method == "GET":
+        if not session.get("admin"):
+            return redirect(url_for('admin_login'))
+        products = Product.query.filter(Product.stock < 10).all()
+
+        return render_template(
+            "admin/updatestock.html",
+            shopname=envs.SHOPNAME,
+            admin=session["admin"],
+            products=products
+        )
+    else:
+        if not session.get("admin"):
+            return jsonify({"success": False, "message": "Invalid Request"})
+        
+        pid = request.form.get("pid")
+        value = request.form.get("value")
+
+        try:
+            pid = int(pid)
+            value = int(value)
+        except:
+            return jsonify({"success": False, "message": "Invalid Request"})
+
+        p = Product.query.get(pid)
+        if p == None:
+            return jsonify({"success": False, "message": "Invalid Request"})
+
+        if value < 1:
+            return jsonify({"success": False, "message": "Invalid Request"})
+
+        p.stock = value
+        db.session.commit()
+        return jsonify({"success": True, "name": p.name})
+
+
+
+
+
+        
+
+
 
 
 @app.route("/admin/products")
@@ -691,20 +748,15 @@ def homepage():
         load_cart(session["customer"])
     
     if request.method == "GET":
-        """
         if session.get("context") != None:
             session["context"].clear()
             session["context"] = None
         session["context"] = fetch_products()
-        """
-        if session.get("context") == None:
-            session["context"] = fetch_products()
 
         return render_template(
             "customers/homepage.html",
             shopname=envs.SHOPNAME,
             customer=session["customer"],
-            #products=session["context"]["products"],
             categories=session["context"]["categories"],
             cart=session["cart"],
             amount=session["totalprice"]
