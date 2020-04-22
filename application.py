@@ -31,6 +31,7 @@ class PhotoForm(FlaskForm):
 
 
 def get_products():
+    """ Load all products into session """
     if session.get("products") == None:
         session["products"] = {}
         session["categories"] = []
@@ -99,6 +100,7 @@ def admin():
 @app.route("/admin/stockupdate", methods=["POST", "GET"])
 def admin_stock_update():
     if request.method == "GET":
+        #display all stocks that have a value less than 10
         if session.get("customer") != None:
             return redirect(url_for('homepage'))
         if not session.get("admin"):
@@ -117,6 +119,7 @@ def admin_stock_update():
         if not session.get("admin"):
             return jsonify({"success": False, "message": "Invalid Request"})        
         
+        #ajax query to update stock value
         pid = request.form.get("pid")
         value = request.form.get("value")
 
@@ -155,7 +158,7 @@ def admin_products_details():
         return redirect(url_for('homepage'))
     if not session.get("admin"):
         return redirect(url_for('admin_login'))
-    
+    #Detailed view of all products
     get_products()
     return render_template("admin/detailedproducts.html", shopname=envs.SHOPNAME, admin=session["admin"], products=session["products"], categories=session["categories"])
 
@@ -166,7 +169,7 @@ def admin_edit_tags(name):
         return redirect(url_for('homepage'))
     if not session.get("admin"):
         return redirect(url_for('admin_login'))    
-
+    #edit/add existing tags for existing products
     get_products()
     p = Product.query.filter_by(name=name).first()
     if p == None:
@@ -229,12 +232,12 @@ def admin_edit_tags(name):
 
 
 @app.route("/admin/<name>/tags", methods=["POST", "GET"])
-def admin_add_tags(name):
+def admin_add_tags(name):    
     if session.get("customer") != None:
         return redirect(url_for('homepage'))
     if not session.get("admin"):
         return redirect(url_for('admin_login'))    
-
+    #add new tags to newly added products that don't have any tags associated with them
     get_products()
     p = Product.query.filter_by(name=name).first()
     if p == None:
@@ -293,7 +296,7 @@ def admin_add_product():
         return redirect(url_for('homepage'))
     if not session.get("admin"):
         return redirect(url_for('admin_login'))    
-
+    #add new products
     get_products()
     if session.get("newproduct") == None:
         session["newproduct"] = {}
@@ -379,6 +382,7 @@ def admin_add_product():
 
 
 def add_image(form, name):
+    """ push image in s3 bucket """
     s3_client = boto3.client('s3')
     prefix = "product-images/"
     if form.validate_on_submit():
@@ -412,7 +416,7 @@ def admin_change_product_image(name):
     p = Product.query.filter_by(name=name).first()
     if p == None:
         return redirect(url_for('admin_products'))
-
+    #change image
     url = remove_and_add_image(form, str(p.id))
     if not url:
         return render_template("admin/changeimage.html", shopname=envs.SHOPNAME, product=session["products"][name], form=form, admin=session["admin"], change_image_error="Invalid/Missing Image")
@@ -421,6 +425,7 @@ def admin_change_product_image(name):
 
 
 def remove_and_add_image(form, name):
+    """" delete existing image and add a new image """
     s3_client = boto3.client('s3')
     prefix = "product-images/"
     if form.validate_on_submit():
@@ -438,6 +443,7 @@ def remove_and_add_image(form, name):
 
 @app.route("/admin/<string:name>/modify", methods=["POST", "GET"])
 def admin_modify_product(name):
+    #edit product info
     if session.get("customer") != None:
         return redirect(url_for('homepage'))
     if not session.get("admin"):
@@ -529,6 +535,7 @@ def admin_modify_product(name):
 
 @app.route("/getinfo/<name>")
 def getProductInfo(name):
+    #ajax query to display product info
     if session.get("customer") != None:
         return jsonify({"success": False})
     if not session.get("admin"):
@@ -551,6 +558,7 @@ def refresh():
 
 @app.route("/refresh")
 def refresh_products():
+    #refresh session["products"]
     if session.get("customer") != None:
         return redirect(url_for('homepage'))
     if not session.get("admin"):
@@ -574,7 +582,7 @@ def admin_search():
     refresh()
     results = []
     for key, value in session["products"].items():
-        if value["tags"] == None:
+        if value["tags"] == None:   #if there are no tags associated with this product
             if keyword in key.lower():
                 results.append(value)
         else:
@@ -587,6 +595,11 @@ def admin_search():
 
 @app.route("/admin/newproducts")
 def newproducts():
+    #ajax request
+    #this return a boolean
+    #if there is any products with no tags associated with it
+    #then it returns true
+    #If all products have tags associated then it returns false
     if session.get("customer") != None:
         return jsonify({"success": False})
     if not session.get("admin"):
@@ -806,6 +819,11 @@ def homepage():
             amount=session["totalprice"]
         )
     else:
+        #lazy loading
+        #only 14 products are displayed at a time
+        #new products are added when -
+        #window.innerHeight + window.scrollY >= document.body.offsetHeight
+        #refer to static/customers/productshome.js
         if session.get("admin"):
             return jsonify({"success": False})
         if session.get("customer") == None:
@@ -863,6 +881,10 @@ def search():
 
 @app.route("/ifcart")
 def ifcart():
+    #ajax request
+    # if cart is empty then it returns false
+    # and cart div is hidden
+    # else cart div is displayed
     if session.get("admin"):
         return jsonify({"success": False})
     if session.get("customer") == None:
@@ -900,8 +922,10 @@ def add2cart(pid, qty):
         load_cart(session["customer"])
 
     if p.name in session["cart"]:
+        #if product is already in cart then cart is updated
         QTY = session["cart"][p.name]["qty"] + qty
         if p.stock < QTY:
+            # if new quantity is not available then customer is informed
             return jsonify({"success": False, "message": f"Only {p.stock} {p.unit}(s) of {p.name}(s) is/are available."})
         session["cart"][p.name].clear()
         session["cart"][p.name] = {"name": p.name, "price": p.price, "unit": p.unit, "qty": QTY, "amount": ((p.price)*(QTY))}
@@ -951,6 +975,7 @@ def removeFromCart(name):
 
 @app.route("/erasecart")
 def erasecart():
+    #clear cart and delete all items
     if session.get("admin"):
         return jsonify({"success": False, "message": "Invalid Request"})
     if session.get("customer") == None:
@@ -974,6 +999,7 @@ def erasecart():
 
 @app.route("/buy", methods=["POST", "GET"])
 def placeorder():
+    # confirm order and checkout
     if request.method == "GET":
         if session.get("admin"):
             return redirect(url_for('admin'))
@@ -993,15 +1019,20 @@ def placeorder():
 
         cart = session["cart"].copy()
         message = []
+        #re-check cart items for availability
         for key, value in cart.items():
             p = Product.query.filter_by(name=key).first()
             if p.stock <= 0:
+                # if some product is out of stock then it is removed from cart
+                # and its amount is deducted from total amount
                 session["totalprice"] -= session["cart"][p.name]["amount"]
                 del session["cart"][p.name]
                 tr = Transaction.query.filter_by(status="INCART").filter_by(username=session["customer"]).filter_by(product_id=p.id).first()                
                 db.session.delete(tr)
                 message.append(f"{p.name} is out of Stock.")
             elif p.stock < value["qty"]:
+                # if the product is in stock but the quantity in cart is now more than the stock value then
+                # the difference in quantity is deducted from cart quantity.
                 diff = value["qty"] - p.stock
                 session["totalprice"] -= (diff*(p.price))
                 session["cart"][p.name]["qty"] = p.stock
@@ -1010,11 +1041,11 @@ def placeorder():
                 tr.qty = p.stock
                 tr.amount = ((p.stock)*(p.price))
                 message.append(f"Only {p.stock} {p.unit}(s) of {p.name}(s) is/are available.")
-
+        #update cart items after re-checking for stock availability is rendered
         db.session.commit()
         return render_template("customers/buy.html", shopname=envs.SHOPNAME, customer=session["customer"], cart=session["cart"], amount=session["totalprice"], addresses=addresses, messages=message)
 
-    else:
+    else:# ajax post request
         if session.get("admin"):
             return jsonify({"success": False, "message": "Invalid Request"})
         if session.get("customer") == None:
@@ -1066,13 +1097,15 @@ def placeorder():
         session["cart"].clear()
         session["cart"] = None
         session["totalprice"] = 0
-
+        #this emit request sends code to administrator hearing at
+        # static/admin/orders.js and static/admin/homepage.js
         socketio.emit("new order", {"code": code}, broadcast=False)
         return jsonify({"success": True, "message": code})
 
 
 @app.route("/address", methods=["POST", "GET"])
 def address():
+    #add a delivery address
     if session.get("admin"):
         return redirect(url_for('admin'))
     if session.get("customer") == None:
@@ -1129,7 +1162,7 @@ def orders():
         return redirect(url_for('admin'))
     if session.get("customer") == None:
         return redirect(url_for('login'))
-    
+    #all orders and count of closed and cancelled orders
     orders = get_orders(session["customer"])
     countCL = Order.query.filter_by(status="CLOSED").filter_by(username=session["customer"]).count()
     countCN = Order.query.filter_by(status="CANCELLED").filter_by(username=session["customer"]).count()
@@ -1162,12 +1195,15 @@ def cancel(orderid):
     o.status = "FOR CANCELLATION"
     o.prefered_time = None
     db.session.commit()
+    #this emit request sends code to administrator hearing at
+    # static/admin/orders.js and static/admin/homepage.js
     socketio.emit("order cancellation", {"code": o.code}, broadcast=False)
     return jsonify({"success": True, "message": "FOR CANCELLATION"})
 
 
 @app.route("/productInfo/<name>")
 def productInfo(name):
+    #ajax request
     if session.get("admin"):
         return jsonify({"success": False, "message": "Invalid Request"})
 
@@ -1178,6 +1214,7 @@ def productInfo(name):
     if p == None:
         return jsonify({"success": False, "message": "Product Does Not Exist"})
     
+    #displays product info on customer homepage
     return jsonify({"success": True, "message": p.info})
 
 
@@ -1185,6 +1222,10 @@ def productInfo(name):
 def getusername():
     if session.get("admin"):
         return jsonify({"success": False})
+
+    # when administrators mark some order as dispatched or process order cancellation request
+    # this ajax request is used to verify socketio emits
+    # statis/orders.js line 7 and 19
 
     if session.get("customer") == None:
         return jsonify({"success": False})
