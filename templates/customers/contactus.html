@@ -1,0 +1,43 @@
+{% extends "customers/layout.html" %}
+
+{% block title %}
+    Contact Us
+{% endblock %}
+
+{% block script %}
+    <script src="{{ url_for('static', filename='customers/contactus.js') }}"></script>
+{% endblock %}
+
+{% block style %}
+<link href="{{ url_for('static', filename='customers/contactus.css') }}" rel="stylesheet">
+{% endblock %}
+
+
+{% block body %}
+<div id="contactus">
+    {% if contact_error %}
+        <div style="text-align: center;" class="errorMessage">
+            {{ contact_error }}
+        </div>
+    {% endif %}
+    <div class="container">
+        <form id="contactform">
+            <label for="name">Your Name</label>
+            <input type="text" id="name" name="name" placeholder="Your name..">
+        
+            <label for="subject">Subject</label>
+            <input type="text" id="subject" name="subject" placeholder="Subject..">
+        
+            <label for="message">Message</label>
+            <textarea id="message" name="message" placeholder="Write something.." style="height:200px"></textarea>
+        
+            <input type="submit" value="Submit" id="submitbutton">
+            <br>
+            <span id="submitmessage" style="color: red;"></span>
+        </form>
+    </div>
+</div>
+<div style="text-align: center;">
+    <span id="contactmessage"></span>
+</div>
+{% endblock %}

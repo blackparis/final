@@ -1193,6 +1193,159 @@ def verification():
     return redirect("/login")
 
 
+@app.route("/changepassword", methods=["POST", "GET"])
+def changepassword():
+    if session.get("customer") == None:
+        return redirect(url_for('login'))
+    
+    if request.method == "GET":
+        return render_template("customers/changepassword.html", shopname=envs.SHOPNAME, customer=session["customer"])
+
+    oldpassword = request.form.get("oldpassword")
+    password1 = request.form.get("password1")
+    password2 = request.form.get("password2")
+
+    if not oldpassword or not password1 or not password2:
+        return render_template("customers/changepassword.html", shopname=envs.SHOPNAME, customer=session["customer"], changepassword_error="fill in all details")
+    
+    if password2 != password1:
+        return render_template("customers/changepassword.html", shopname=envs.SHOPNAME, customer=session["customer"], changepassword_error="New passwords don't match.")
+    
+    if not util.validate_password(password1):
+        return render_template("customers/changepassword.html", shopname=envs.SHOPNAME, customer=session["customer"], changepassword_error="Please select a strong password.")
+
+    user = User.query.filter_by(username=session["customer"]).first()
+    if check_password_hash(user.password, oldpassword):
+        password = generate_password_hash(password1)
+        user.password = password
+        db.session.commit()
+        return redirect(url_for('homepage'))
+    else:
+        return render_template("customers/changepassword.html", shopname=envs.SHOPNAME, customer=session["customer"], changepassword_error="Current password is incorrect.")
+
+
+@app.route("/forgotpassword", methods=["POST", "GET"])
+def forgotpassword():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
+    
+    if request.method == "GET":
+        return render_template("customers/auth/password.html", shopname=envs.SHOPNAME, fp=True)
+    
+    email = request.form.get("email")
+
+    if not email:
+        return render_template("customers/auth/password.html", shopname=envs.SHOPNAME, fp=True, fp_error="type your email address or username")
+
+    user = User.query.filter_by(email=email).first()
+    if user == None:
+        user = User.query.filter_by(username=email).first()
+        if user == None:
+            return render_template("customers/auth/password.html", shopname=envs.SHOPNAME, fp=True, fp_error="Invalid Credentials")
+
+    code = str(random.randint(100000, 999999))
+    util.sendmail(user.email, "Verify Email Address", code)
+    session["userinfo"] = {"user": user, "code": code}
+    return redirect(url_for('recoverpassword'))
+
+@app.route("/recoverpassword", methods=["POST", "GET"])
+def recoverpassword():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
+    
+    if session.get("userinfo") == None:
+        return redirect(url_for('homepage'))
+    
+    if request.method == "GET":
+        return render_template("customers/auth/recoverpassword.html", shopname=envs.SHOPNAME, fp=True)
+    
+    code = request.form.get("code")
+    if not code:
+        return render_template("customers/auth/recoverpassword.html", shopname=envs.SHOPNAME, fp=True, fp_code_error="enter verification code")
+    if code != session["userinfo"]["code"]:
+        return render_template("customers/auth/recoverpassword.html", shopname=envs.SHOPNAME, fp=True, fp_code_error="incorrect code")
+    
+    return redirect(url_for('changeyourpassword'))
+
+
+@app.route("/changeyourpassword", methods=["POST", "GET"])
+def changeyourpassword():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
+    
+    if session.get("userinfo") == None:
+        return redirect(url_for('homepage'))
+
+    if request.method == "GET":
+        return render_template("customers/auth/changeyourpassword.html", shopname=envs.SHOPNAME, fp=True)
+
+    password1 = request.form.get("password1")
+    password2 = request.form.get("password2")
+
+    if not password1 or not password2:
+        return render_template("customers/auth/changeyourpassword.html", shopname=envs.SHOPNAME, fp=True, changepassword_error="fill in all fields")
+    
+    if password2 != password1:
+        return render_template("customers/auth/changeyourpassword.html", shopname=envs.SHOPNAME, fp=True, changepassword_error="passwords don't match")
+
+    if not util.validate_password(password1):
+        return render_template("customers/auth/changeyourpassword.html", shopname=envs.SHOPNAME, fp=True, changepassword_error="set a strong password")
+    
+    user = User.query.filter_by(username=session["userinfo"]["user"].username).first()
+    if user == None:
+        return redirect(url_for('login'))
+
+    password = generate_password_hash(password1)
+    user.password = password
+    db.session.commit()
+
+    session["userinfo"].clear()
+    session["userinfo"] = None
+
+    return redirect(url_for('login'))
+
+
+@app.route("/resendcode")
+def resendcode():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
+    
+    if session.get("userinfo") == None:
+        return redirect(url_for('homepage'))
+
+    code = str(random.randint(100000, 999999))
+    util.sendmail(session["userinfo"]["user"].email, "Verify Email Address", code)
+    session["userinfo"]["code"] = code
+
+    return redirect(url_for('recoverpassword'))
+
+
+@app.route("/contactus", methods=["POST", "GET"])
+def contactus():
+    if request.method == "GET":
+        if session.get("customer") == None:
+            return redirect(url_for('login'))
+        return render_template("customers/contactus.html", shopname=envs.SHOPNAME, customer=session["customer"])
+    else:
+        if session.get("customer") == None:
+            return jsonify({"success": False, "message": "Invalid Request"})
+
+        name = request.form.get("name")
+        subject = request.form.get("subject")
+        message = request.form.get("message")
+
+        if not name or not subject or not message:
+            return jsonify({"success": False, "message": "Incomplete Details"})
+        
+        s = f'<Subject: {subject}> <Name: {name}> <Username: {session["customer"]}>'
+        try:
+            util.sendmail(envs.ADMIN_EMAIL_ADDRESS, s, message)
+        except:
+            return jsonify({"success": False, "message": "Something went wrong. Please try again after sometime."})
+
+        return jsonify({"success": True})
+
+
 # admin page - code for new-order/order-cancellation notification (websocket)
 @app.route("/admin/orderdetails/<int:code>")
 def orderdetails(code):

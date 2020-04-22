@@ -20,10 +20,13 @@
                         <h1 id="shopname">{{ shopname }}</h1>
                         {% if login %}
                             <a href="{{ url_for('register') }}">Register</a>&nbsp;&nbsp;
-                            <a href="#">Forgot Password</a>
+                            <a href="{{ url_for('forgotpassword') }}">Forgot Password</a>
                         {% elif register %}
                             <a href="{{ url_for('login') }}">Login</a>&nbsp;&nbsp;
                             <a href="#">Forgot Password</a>
+                        {% elif fp %}
+                            <a href="{{ url_for('login') }}">Login</a>&nbsp;&nbsp;
+                            <a href="{{ url_for('register') }}">Register</a>&nbsp;&nbsp;
                         {% endif %}
                     </div>
                     <div class="col-lg-2">
