@@ -126,14 +126,6 @@ def admin_stock_update():
         return jsonify({"success": True, "name": p.name})
 
 
-
-
-
-        
-
-
-
-
 @app.route("/admin/products")
 def admin_products():
     if not session.get("admin"):
@@ -1498,8 +1490,4 @@ def order_details(username, orderid):
         "code": order.code
     }
 
-    return jsonify({"success": True, "response": response})    
-    
-
-#if __name__ == '__main__':
-#    socketio.run(app)
+    return jsonify({"success": True, "response": response})
