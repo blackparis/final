@@ -70,10 +70,18 @@ def get_products():
         return
 
 
+@app.route("/sessionclear")
+def sessionclear():
+    session.clear()
+    return redirect("/")
+
+
 @app.route("/admin")
 def admin():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
     if not session.get("admin"):
-        return redirect(url_for('admin_login'))
+        return redirect(url_for('admin_login'))    
     
     count_open = Order.query.filter_by(status="OPEN").count()
     count_for_cancellaiton = Order.query.filter_by(status="FOR CANCELLATION").count()
@@ -91,10 +99,12 @@ def admin():
 @app.route("/admin/stockupdate", methods=["POST", "GET"])
 def admin_stock_update():
     if request.method == "GET":
+        if session.get("customer") != None:
+            return redirect(url_for('homepage'))
         if not session.get("admin"):
             return redirect(url_for('admin_login'))
+        
         products = Product.query.filter(Product.stock < 10).all()
-
         return render_template(
             "admin/updatestock.html",
             shopname=envs.SHOPNAME,
@@ -102,8 +112,10 @@ def admin_stock_update():
             products=products
         )
     else:
-        if not session.get("admin"):
+        if session.get("customer") != None:
             return jsonify({"success": False, "message": "Invalid Request"})
+        if not session.get("admin"):
+            return jsonify({"success": False, "message": "Invalid Request"})        
         
         pid = request.form.get("pid")
         value = request.form.get("value")
@@ -128,24 +140,33 @@ def admin_stock_update():
 
 @app.route("/admin/products")
 def admin_products():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
     if not session.get("admin"):
         return redirect(url_for('admin_login'))
+    
     get_products()
     return render_template("admin/products.html", shopname=envs.SHOPNAME, admin=session["admin"], products=session["products"], categories=session["categories"])
 
 
 @app.route("/admin/products/details")
 def admin_products_details():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
     if not session.get("admin"):
         return redirect(url_for('admin_login'))
+    
     get_products()
     return render_template("admin/detailedproducts.html", shopname=envs.SHOPNAME, admin=session["admin"], products=session["products"], categories=session["categories"])
 
 
 @app.route("/admin/<name>/tags/edit", methods=["POST", "GET"])
 def admin_edit_tags(name):
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
     if not session.get("admin"):
-        return redirect(url_for('admin_login'))
+        return redirect(url_for('admin_login'))    
+
     get_products()
     p = Product.query.filter_by(name=name).first()
     if p == None:
@@ -209,8 +230,11 @@ def admin_edit_tags(name):
 
 @app.route("/admin/<name>/tags", methods=["POST", "GET"])
 def admin_add_tags(name):
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
     if not session.get("admin"):
-        return redirect(url_for('admin_login'))
+        return redirect(url_for('admin_login'))    
+
     get_products()
     p = Product.query.filter_by(name=name).first()
     if p == None:
@@ -265,8 +289,11 @@ def admin_add_tags(name):
 
 @app.route("/admin/products/add", methods=["POST", "GET"])
 def admin_add_product():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
     if not session.get("admin"):
         return redirect(url_for('admin_login'))    
+
     get_products()
     if session.get("newproduct") == None:
         session["newproduct"] = {}
@@ -369,8 +396,10 @@ def add_image(form, name):
 
 @app.route("/admin/<string:name>/changeimage", methods=["POST", "GET"])
 def admin_change_product_image(name):
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
     if not session.get("admin"):
-        return redirect(url_for('admin_login'))
+        return redirect(url_for('admin_login'))    
     
     get_products()
     if name not in session["products"]:
@@ -409,8 +438,10 @@ def remove_and_add_image(form, name):
 
 @app.route("/admin/<string:name>/modify", methods=["POST", "GET"])
 def admin_modify_product(name):
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
     if not session.get("admin"):
-        return redirect(url_for('admin_login'))
+        return redirect(url_for('admin_login'))    
 
     get_products()
     p = Product.query.filter_by(name=name).first()
@@ -498,8 +529,10 @@ def admin_modify_product(name):
 
 @app.route("/getinfo/<name>")
 def getProductInfo(name):
-    if not session.get("admin"):
+    if session.get("customer") != None:
         return jsonify({"success": False})
+    if not session.get("admin"):
+        return jsonify({"success": False})    
     
     if name not in session["products"]:
         return jsonify({"success": False})
@@ -518,6 +551,8 @@ def refresh():
 
 @app.route("/refresh")
 def refresh_products():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
     if not session.get("admin"):
         return redirect(url_for('admin_login'))
     refresh()
@@ -526,8 +561,11 @@ def refresh_products():
 
 @app.route("/admin/search", methods=["POST"])
 def admin_search():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
     if not session.get("admin"):
-        return redirect(url_for('admin_login'))
+        return redirect(url_for('admin_login'))    
+
     keyword = request.form.get("keyword")
     if not keyword:
         return render_template("admin/search.html", shopname=envs.SHOPNAME, admin=session["admin"], message="Type Something")
@@ -549,6 +587,8 @@ def admin_search():
 
 @app.route("/admin/newproducts")
 def newproducts():
+    if session.get("customer") != None:
+        return jsonify({"success": False})
     if not session.get("admin"):
         return jsonify({"success": False})
     
@@ -578,8 +618,10 @@ def get_admin_orders():
 
 @app.route("/admin/orders")
 def admin_orders():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
     if not session.get("admin"):
-        return redirect(url_for('admin_login'))
+        return redirect(url_for('admin_login'))    
 
     orders = get_admin_orders()
     countO = Order.query.filter_by(status="OPEN").count()
@@ -590,6 +632,8 @@ def admin_orders():
 
 @app.route("/admin/cancelorder/<int:orderid>")
 def admin_cancel_order(orderid):
+    if session.get("customer") != None:
+        return jsonify({"success": False, "message": "Invalid Request"})
     if not session.get("admin"):
         return jsonify({"success": False, "message": "Invalid Request"})
 
@@ -625,6 +669,8 @@ def admin_cancel_order(orderid):
 
 @app.route("/admin/closeorder/<int:orderid>")
 def admin_close_order(orderid):
+    if session.get("customer") != None:
+        return jsonify({"success": False, "message": "Invalid Request"})
     if not session.get("admin"):
         return jsonify({"success": False, "message": "Invalid Request"})
 
@@ -651,6 +697,8 @@ def admin_close_order(orderid):
 
 @app.route("/admin/login", methods=["POST", "GET"])
 def admin_login():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
     if session.get("admin"):
         return redirect(url_for('admin'))
 
@@ -673,6 +721,8 @@ def admin_login():
 
 @app.route("/admin/logout")
 def admin_logout():
+    if session.get("customer") != None:
+        return redirect(url_for('homepage'))
     session.clear()
     return redirect(url_for('admin_login'))
 
@@ -733,13 +783,15 @@ def load_cart(username):
 
 @app.route("/", methods=["POST", "GET"])
 def homepage():
-    if session.get("customer") == None:
-        return redirect(url_for('login'))
-
-    if session.get("cart") == None:
-        load_cart(session["customer"])
-    
     if request.method == "GET":
+        if session.get("admin"):
+            return redirect(url_for('admin'))
+        if session.get("customer") == None:
+            return redirect(url_for('login'))
+
+        if session.get("cart") == None:
+            load_cart(session["customer"])
+
         if session.get("context") != None:
             session["context"].clear()
             session["context"] = None
@@ -754,6 +806,11 @@ def homepage():
             amount=session["totalprice"]
         )
     else:
+        if session.get("admin"):
+            return jsonify({"success": False})
+        if session.get("customer") == None:
+            return jsonify({"success": False})
+            
         if session.get("context") == None:
             session["context"] = fetch_products()
 
@@ -780,6 +837,8 @@ def homepage():
     
 @app.route("/search", methods=["POST"])
 def search():
+    if session.get("admin"):
+        return redirect(url_for('admin'))
     if session.get("customer") == None:
         return redirect(url_for('login'))
     
@@ -804,6 +863,8 @@ def search():
 
 @app.route("/ifcart")
 def ifcart():
+    if session.get("admin"):
+        return jsonify({"success": False})
     if session.get("customer") == None:
         return jsonify({"success": False})
     
@@ -815,6 +876,8 @@ def ifcart():
 
 @app.route("/add2cart/<pid>/<qty>")
 def add2cart(pid, qty):
+    if session.get("admin"):
+        return jsonify({"success": False, "message": "Invalid Request"})
     if session.get("customer") == None:
         return jsonify({"success": False, "message": "Invalid Request"})
     
@@ -861,6 +924,8 @@ def add2cart(pid, qty):
 
 @app.route("/cart/remove/<name>")
 def removeFromCart(name):
+    if session.get("admin"):
+        return jsonify({"success": False, "message": "Invalid Request"})
     if session.get("customer") == None:
         return jsonify({"success": False, "message": "Invalid Request"})
 
@@ -886,6 +951,8 @@ def removeFromCart(name):
 
 @app.route("/erasecart")
 def erasecart():
+    if session.get("admin"):
+        return jsonify({"success": False, "message": "Invalid Request"})
     if session.get("customer") == None:
         return jsonify({"success": False, "message": "Invalid Request"})
 
@@ -908,6 +975,8 @@ def erasecart():
 @app.route("/buy", methods=["POST", "GET"])
 def placeorder():
     if request.method == "GET":
+        if session.get("admin"):
+            return redirect(url_for('admin'))
         if session.get("customer") == None:
             return redirect(url_for('login'))
     
@@ -944,57 +1013,68 @@ def placeorder():
 
         db.session.commit()
         return render_template("customers/buy.html", shopname=envs.SHOPNAME, customer=session["customer"], cart=session["cart"], amount=session["totalprice"], addresses=addresses, messages=message)
+
+    else:
+        if session.get("admin"):
+            return jsonify({"success": False, "message": "Invalid Request"})
+        if session.get("customer") == None:
+            return jsonify({"success": False, "message": "Invalid Request"})
+    
+        if session.get("cart") == None or session["cart"] == {}:
+            return jsonify({"success": False, "message": "Invalid Request"})
+
+        address = request.form.get("address")
+        time = request.form.get("time")
+
+        if not time:
+            time = None
+
+        if not address:
+            return jsonify({"success": False, "message": "Select a Delivery Address"})
+
+        try:
+            address = int(address)
+        except:
+            return jsonify({"success": False, "message": "Invalid Request"})
         
-    address = request.form.get("address")
-    time = request.form.get("time")
+        while True:
+            code = random.randint(100000, 9999999)
+            o = Order.query.filter_by(code=code).first()
+            if o == None:
+                break
 
-    if not time:
-        time = None
+        order_time = datetime.now()
+        o = Order(
+            username=session["customer"],
+            addressID=address,
+            amount=session["totalprice"],
+            order_time=order_time,
+            prefered_time=time,
+            code=code
+        )
+        db.session.add(o)
 
-    if not address:
-        return jsonify({"success": False, "message": "Select a Delivery Address"})
+        tr = Transaction.query.filter_by(status="INCART").filter_by(username=session["customer"]).all()
+        for t in tr:
+            p = Product.query.get(t.product_id)
+            p.stock -= t.qty
+            t.status = "ORDERED"
+            t.code = code
+        
+        db.session.commit()
 
-    try:
-        address = int(address)
-    except:
-        return jsonify({"success": False, "message": "Invalid Request"})
-    
-    while True:
-        code = random.randint(100000, 9999999)
-        o = Order.query.filter_by(code=code).first()
-        if o == None:
-            break
+        session["cart"].clear()
+        session["cart"] = None
+        session["totalprice"] = 0
 
-    order_time = datetime.now()
-    o = Order(
-        username=session["customer"],
-        addressID=address,
-        amount=session["totalprice"],
-        order_time=order_time,
-        prefered_time=time,
-        code=code
-    )
-    db.session.add(o)
-
-    tr = Transaction.query.filter_by(status="INCART").filter_by(username=session["customer"]).all()
-    for t in tr:
-        p = Product.query.get(t.product_id)
-        p.stock -= t.qty
-        t.status = "ORDERED"
-        t.code = code
-    
-    db.session.commit()
-
-    session["cart"].clear()
-    session["cart"] = None
-    session["totalprice"] = 0
-
-    socketio.emit("new order", {"code": code}, broadcast=False)
-    return jsonify({"success": True, "message": code})
+        socketio.emit("new order", {"code": code}, broadcast=False)
+        return jsonify({"success": True, "message": code})
 
 
 @app.route("/address", methods=["POST", "GET"])
 def address():
+    if session.get("admin"):
+        return redirect(url_for('admin'))
     if session.get("customer") == None:
         return redirect(url_for('login'))
 
@@ -1045,6 +1125,8 @@ def get_orders(username):
 
 @app.route("/orders")
 def orders():
+    if session.get("admin"):
+        return redirect(url_for('admin'))
     if session.get("customer") == None:
         return redirect(url_for('login'))
     
@@ -1056,8 +1138,11 @@ def orders():
 
 @app.route("/cancel/order/<int:orderid>")
 def cancel(orderid):
+    if session.get("admin"):
+        return jsonify({"success": False, "message": "Invalid Request"})
+
     if session.get("customer") == None:
-        return jsonify({"success": False, "message": "Invalid Request"})   
+        return jsonify({"success": False, "message": "Invalid Request"})
 
     try:
         orderid = int(orderid)
@@ -1083,6 +1168,9 @@ def cancel(orderid):
 
 @app.route("/productInfo/<name>")
 def productInfo(name):
+    if session.get("admin"):
+        return jsonify({"success": False, "message": "Invalid Request"})
+
     if session.get("customer") == None:
         return jsonify({"success": False, "message": "Invalid Request"})
 
@@ -1095,6 +1183,9 @@ def productInfo(name):
 
 @app.route("/getusername")
 def getusername():
+    if session.get("admin"):
+        return jsonify({"success": False})
+
     if session.get("customer") == None:
         return jsonify({"success": False})
     else:
@@ -1103,6 +1194,8 @@ def getusername():
 
 @app.route("/login", methods=["POST", "GET"])
 def login():
+    if session.get("admin"):
+        return redirect(url_for('admin'))
     if session.get("customer") != None:
         return redirect(url_for('homepage'))
 
@@ -1130,12 +1223,17 @@ def login():
 
 @app.route("/logout")
 def logout():
+    if session.get("admin"):
+        return redirect(url_for('admin'))
     session.clear()
     return redirect(url_for('login'))
 
 
 @app.route("/register", methods=["POST", "GET"])
 def register():
+    if session.get("admin"):
+        return redirect(url_for('admin'))
+
     if session.get("customer") != None:
         return redirect(url_for('homepage'))
     
@@ -1188,6 +1286,9 @@ def register():
 
 @app.route("/resend")
 def resendverificationcode():
+    if session.get("admin"):
+        return redirect(url_for('admin'))
+
     if session.get("customer") != None:
         return redirect(url_for('homepage'))
 
@@ -1206,6 +1307,9 @@ def resendverificationcode():
 
 @app.route("/verification", methods=["POST", "GET"])
 def verification():
+    if session.get("admin"):
+        return redirect(url_for('admin'))
+
     if session.get("customer") != None:
         return redirect(url_for('homepage'))
 
@@ -1239,6 +1343,9 @@ def verification():
 
 @app.route("/changepassword", methods=["POST", "GET"])
 def changepassword():
+    if session.get("admin"):
+        return redirect(url_for('admin'))
+
     if session.get("customer") == None:
         return redirect(url_for('login'))
     
@@ -1270,6 +1377,9 @@ def changepassword():
 
 @app.route("/forgotpassword", methods=["POST", "GET"])
 def forgotpassword():
+    if session.get("admin"):
+        return redirect(url_for('admin'))
+
     if session.get("customer") != None:
         return redirect(url_for('homepage'))
     
@@ -1294,6 +1404,9 @@ def forgotpassword():
 
 @app.route("/recoverpassword", methods=["POST", "GET"])
 def recoverpassword():
+    if session.get("admin"):
+        return redirect(url_for('admin'))
+
     if session.get("customer") != None:
         return redirect(url_for('homepage'))
     
@@ -1314,6 +1427,9 @@ def recoverpassword():
 
 @app.route("/changeyourpassword", methods=["POST", "GET"])
 def changeyourpassword():
+    if session.get("admin"):
+        return redirect(url_for('admin'))
+
     if session.get("customer") != None:
         return redirect(url_for('homepage'))
     
@@ -1351,6 +1467,9 @@ def changeyourpassword():
 
 @app.route("/resendcode")
 def resendcode():
+    if session.get("admin"):
+        return redirect(url_for('admin'))
+
     if session.get("customer") != None:
         return redirect(url_for('homepage'))
     
@@ -1367,10 +1486,16 @@ def resendcode():
 @app.route("/contactus", methods=["POST", "GET"])
 def contactus():
     if request.method == "GET":
+        if session.get("admin"):
+            return redirect(url_for('admin'))
+
         if session.get("customer") == None:
             return redirect(url_for('login'))
         return render_template("customers/contactus.html", shopname=envs.SHOPNAME, customer=session["customer"])
     else:
+        if session.get("admin"):
+            return jsonify({"success": False, "message": "Invalid Request"})
+
         if session.get("customer") == None:
             return jsonify({"success": False, "message": "Invalid Request"})
 
