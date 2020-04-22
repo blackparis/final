@@ -24,8 +24,8 @@
                         {% if customer %}
                             <a href="{{ url_for('homepage')}}">Homepage</a>&nbsp;&nbsp;     
                             <a href="{{ url_for('orders') }}">Orders</a>&nbsp;&nbsp;
-                            <a href="#">Notifications</a><br>
-                            <a href="#">Account</a>&nbsp;&nbsp;
+                            <a href="#">Contact Us</a><br>
+                            <a href="#">Change Password</a>&nbsp;&nbsp;
                             <a href="{{ url_for('logout')}}">Logout</a><br>
                             {{ customer }}
                         {% endif %}
@@ -37,8 +37,7 @@
                                     <input type="text" class="form-control input-sm" id="keyword" name="keyword" autocomplete="off" placeholder="keyword">
                                 </div>
                                 <button type="submit" class="btn btn-primary btn-sm">Search</button>
-                            </form>
-                            <a href="#">Contact Us</a><br>                            
+                            </form>                            
                         {% endif %}
                     </div>
                 </div>

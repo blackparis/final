@@ -487,8 +487,13 @@ def admin_search():
     refresh()
     results = []
     for key, value in session["products"].items():
-        if keyword in key.lower() or keyword in value["tags"]:
-            results.append(value)
+        if value["tags"] == None:
+            if keyword in key.lower():
+                results.append(value)
+        else:
+            if keyword in key.lower() or keyword in value["tags"]:
+                results.append(value)
+
 
     return render_template("admin/search.html", shopname=envs.SHOPNAME, admin=session["admin"], results=results, keyword=keyword)
 
@@ -639,11 +644,10 @@ def fetch_products():
             "url": p.imageUrl,
             "display": p.display,
             "info": p.info,
-            "tags": None
+            "tags": []
         }
         tags = Tags.query.filter_by(product_id=p.id).first()
         if tags != None:
-            PRODUCTS[p.name]["tags"] = []
             if tags.tag1:
                 PRODUCTS[p.name]["tags"].append(tags.tag1)
             if tags.tag2:
@@ -752,14 +756,6 @@ def search():
         
 
     return render_template("customers/search.html", shopname=envs.SHOPNAME, customer=session["customer"], keyword=name, result=result)
-
-    
-
-
-    
-
-
-
 
 
 @app.route("/ifcart")
